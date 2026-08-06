@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       itemName,
       quantity,
       justification,
+      specifications,
       priority,
       preferredVendor,
       estimatedCost
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
       category: "Pending", // Will be updated by Requirement Agent
       quantity: quantity || 1,
       justification,
+      specifications,
       priority: priority || "Medium",
       preferredVendor,
       estimatedCost: estimatedCost || 0,

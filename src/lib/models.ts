@@ -57,6 +57,7 @@ export interface IProcurementRequest extends Document {
   category: string;
   quantity: number;
   justification: string;
+  specifications?: string;
   priority: string;
   preferredVendor: string;
   estimatedCost: number;
@@ -75,6 +76,7 @@ const ProcurementRequestSchema = new Schema<IProcurementRequest>(
     category: { type: String, required: true },
     quantity: { type: Number, required: true, default: 1 },
     justification: { type: String },
+    specifications: { type: String },
     priority: { type: String, default: "Medium" }, // "Low", "Medium", "High", "Critical"
     preferredVendor: { type: String },
     estimatedCost: { type: Number, required: true, default: 0 },

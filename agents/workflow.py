@@ -121,6 +121,7 @@ Analyze this procurement request:
 Item: "{request.get('itemName')}"
 Quantity: {request.get('quantity')}
 Justification: "{request.get('justification')}"
+Specifications: "{request.get('specifications', 'Not specified')}"
 Preferred Vendor: "{request.get('preferredVendor', 'Not specified')}"
 Estimated Cost: ₹{request.get('estimatedCost', 0)}"""
 
@@ -256,6 +257,7 @@ Estimated Cost: ₹{request.get('estimatedCost', 0)}"""
 
 Assess if we can fulfill this request from inventory:
 Request: "{request.get('itemName')}" (Qty: {request.get('quantity')}, Category: {request.get('category')})
+Specifications: "{request.get('specifications', 'Not specified')}"
 Employee Current Assets: {json.dumps(employee_context.get('currentAssets', []))}
 Available Inventory in DB: {json.dumps(serializable_available)}"""
 
@@ -389,6 +391,7 @@ Available Inventory in DB: {json.dumps(serializable_available)}"""
 
 Compare the available quotations and select the best vendor for this request:
 Request Item: "{request.get('itemName')}" (Est Cost: ₹{request.get('estimatedCost')})
+Specifications: "{request.get('specifications', 'Not specified')}"
 Quotations found: {json.dumps(serializable_quotes)}
 Approved Vendors details: {json.dumps(serializable_vendors)}"""
 
@@ -456,6 +459,7 @@ Verify if this request conforms to corporate procurement policies:
 Request: "{request.get('itemName')}"
 Category: "{request.get('category')}"
 Cost: ₹{request.get('estimatedCost')}
+Specifications: "{request.get('specifications', 'Not specified')}"
 Preferred Vendor: "{vendor_analysis.get('recommendedVendor', request.get('preferredVendor'))}"
 Employee Role: "{employee_role}"
 Policies: {json.dumps(serializable_policies)}"""
@@ -576,6 +580,7 @@ Budget Check context: {json.dumps(budget_check)}"""
 Synthesize findings from all agents and generate a final recommendation decision brief for the manager:
 Employee: "{employee_name}" (Role: "{employee_role}", Dept: "{employee_dept}")
 Request: "{request.get('itemName')}" (Quantity: {request.get('quantity')}, Total Cost: ₹{request.get('estimatedCost')})
+Specifications: "{request.get('specifications', 'Not specified')}"
 Requirement Analysis: {json.dumps(analyzed_requirement)}
 Inventory Assessment: {json.dumps(inventory_check)}
 Budget Assessment: {json.dumps(budget_check)}

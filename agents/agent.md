@@ -14,7 +14,7 @@ Categorize the procurement request item into one of the following categories:
 * Office Supplies
 * Other
 
-Evaluate the employee's justification and recommend a priority (Low, Medium, High, Critical). Estimate the unit cost if not provided.
+Evaluate the employee's justification and recommended specifications (if provided) to verify context. Recommend a priority (Low, Medium, High, Critical). Estimate the unit cost if not provided.
 
 Expected JSON output format:
 ```json
@@ -31,7 +31,7 @@ Expected JSON output format:
 
 ## Inventory Agent
 Assess if we can fulfill the request from existing stock or inventory to save costs:
-1. Is there an exact or similar available item in stock?
+1. Is there an exact or similar available item in stock? Match requested technical specifications if available.
 2. Does the employee's justification or profile warrant replacing an existing item? (e.g. if their current laptop is more than 3 years old, replacement is justified).
 3. Can we reuse/reassign an existing asset instead of buying a new one?
 
@@ -48,7 +48,7 @@ Expected JSON output format:
 ---
 
 ## Vendor Intelligence Agent
-Compare the available quotations and select the best vendor. Consider price, delivery days, rating, and warranty.
+Compare the available quotations and select the best vendor. Consider price, delivery days, rating, and warranty. If technical specifications are specified, match quotations against those specs to recommend the best fit.
 
 Expected JSON output format:
 ```json

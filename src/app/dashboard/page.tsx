@@ -113,6 +113,7 @@ export default function Dashboard() {
   const [procurePriority, setProcurePriority] = useState("Medium");
   const [procureVendor, setProcureVendor] = useState("Dell Inc");
   const [procureReason, setProcureReason] = useState("");
+  const [procureSpecs, setProcureSpecs] = useState("");
 
   // Manager Approval notes (Portal view)
   const [managerComments, setManagerComments] = useState("");
@@ -313,6 +314,7 @@ export default function Dashboard() {
           itemName: procureItem,
           quantity: procureQty,
           justification: procureReason,
+          specifications: procureSpecs,
           priority: procurePriority,
           preferredVendor: procureVendor,
           estimatedCost: parseFloat(procureCost) || 0
@@ -326,6 +328,7 @@ export default function Dashboard() {
         setProcureQty(1);
         setProcureCost("");
         setProcureReason("");
+        setProcureSpecs("");
         setProcurePriority("Medium");
 
         await refreshDashboardData();
@@ -1423,6 +1426,11 @@ export default function Dashboard() {
                       <strong>Justification:</strong> "{selectedRequest.justification}"
                     </div>
                   )}
+                  {selectedRequest.specifications && (
+                    <div style={{ marginTop: "8px", padding: "12px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", fontSize: "14px" }}>
+                      <strong>Specifications:</strong> "{selectedRequest.specifications}"
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -2044,6 +2052,17 @@ export default function Dashboard() {
                     style={{ minHeight: "80px", outline: "none", resize: "none" }}
                     value={procureReason}
                     onChange={(e) => setProcureReason(e.target.value)}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Product Specifications (Optional)</label>
+                  <textarea
+                    placeholder="Describe specific models, brands, or technical specs (e.g. 16GB RAM, 512GB SSD)..."
+                    className={styles.formInput}
+                    style={{ minHeight: "60px", outline: "none", resize: "none" }}
+                    value={procureSpecs}
+                    onChange={(e) => setProcureSpecs(e.target.value)}
                   />
                 </div>
               </div>
