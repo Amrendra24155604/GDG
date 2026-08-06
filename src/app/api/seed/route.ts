@@ -35,6 +35,22 @@ export async function GET() {
     // 2. Seed Users
     const users = await User.insertMany([
       {
+        employeeId: "DEV-001",
+        name: "Amrendra (Developer)",
+        email: "developer@company.com",
+        username: "Amrendra",
+        password: "Ankush@123",
+        role: "Developer",
+        designation: "System Developer",
+        department: "AI Research",
+        managerId: "EMP-002",
+        phone: "+1 (555) 019-2834",
+        joiningDate: new Date("2024-01-01"),
+        location: "Remote",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD67qBvL4iS69MlsQulPSKDPS0kYlmj3HR75uEPL6urgBgNo4-GvXZNeZvYZoBh0Owz_E493QbNkTRYyf2Py_tHaguvea1rTAkZM9AVAiuAoQyc51Oxbgu9DfpPpRFRRlHUr65CHSqpXuM4D-rXESLXpkxJNvpHX2hOrhSdJ8NbEdmVgIoV446puGskGQs_ii6oxeDfojw6hI6umW7P2BzMs1gQIJ9OxozSbWxuVTazugISI-IvHFRTNw",
+        isActive: true,
+      },
+      {
         employeeId: "EMP-001",
         name: "Amrendra Yadav",
         email: "amrendraky06@gmail.com",
