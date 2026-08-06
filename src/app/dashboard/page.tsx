@@ -22,6 +22,7 @@ interface ProcurementReq {
   category: string;
   quantity: number;
   justification: string;
+  specifications?: string;
   priority: string;
   preferredVendor: string;
   estimatedCost: number;
