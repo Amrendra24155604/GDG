@@ -238,18 +238,26 @@ Estimated Cost: ₹{request.get('estimatedCost', 0)}"""
         start_time = time.time()
         simulate_delay(1.2)
         
-        available_assets_cursor = db["assets"].find({
-            "category": request.get("category", "Laptop"),
-            "status": "Available"
-        })
-        available_assets = list(available_assets_cursor)
+        # Search for assets in DB that match category or share name keywords
+        item_name = request.get("itemName", "")
+        keywords = [kw for kw in item_name.split() if len(kw) > 2]
         
-        serializable_available = [
+        query_conditions = [{"category": request.get("category", "Laptop")}]
+        for kw in keywords:
+            query_conditions.append({"assetName": {"$regex": kw, "$options": "i"}})
+            
+        matching_assets_cursor = db["assets"].find({"$or": query_conditions})
+        matching_assets = list(matching_assets_cursor)
+        
+        serializable_matching = [
             {
                 "assetId": a.get("assetId"),
                 "name": a.get("assetName"),
-                "condition": a.get("condition")
-            } for a in available_assets
+                "category": a.get("category"),
+                "condition": a.get("condition"),
+                "status": a.get("status"), # "Available", "Assigned", etc.
+                "assignedTo": a.get("assignedTo", "None")
+            } for a in matching_assets
         ]
         
         rules = load_agent_rules("Inventory Agent")
@@ -259,7 +267,7 @@ Assess if we can fulfill this request from inventory:
 Request: "{request.get('itemName')}" (Qty: {request.get('quantity')}, Category: {request.get('category')})
 Specifications: "{request.get('specifications', 'Not specified')}"
 Employee Current Assets: {json.dumps(employee_context.get('currentAssets', []))}
-Available Inventory in DB: {json.dumps(serializable_available)}"""
+Matching Assets in DB (Available and Assigned): {json.dumps(serializable_matching)}"""
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -280,7 +288,7 @@ Available Inventory in DB: {json.dumps(serializable_available)}"""
             "status": "Completed",
             "confidence": result.get("confidenceScore", 90),
             "reasoning": result.get("reasoning", "No stock reassignments recommended."),
-            "evidence": json.dumps({"availableCount": len(available_assets), "inventoryResult": result}),
+            "evidence": json.dumps({"availableCount": len([a for a in matching_assets if a.get("status") == "Available"]), "inventoryResult": result}),
             "executionTime": int((time.time() - start_time) * 1000),
             "timestamp": datetime.now(timezone.utc)
         })

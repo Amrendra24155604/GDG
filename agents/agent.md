@@ -31,9 +31,10 @@ Expected JSON output format:
 
 ## Inventory Agent
 Assess if we can fulfill the request from existing stock or inventory to save costs:
-1. Is there an exact or similar available item in stock? Match requested technical specifications if available.
-2. Does the employee's justification or profile warrant replacing an existing item? (e.g. if their current laptop is more than 3 years old, replacement is justified).
-3. Can we reuse/reassign an existing asset instead of buying a new one?
+1. Scan the list of `Matching Assets in DB` (which contains both Available and Assigned items matching the category or keyword).
+2. Check if there are matching items in stock with `"status": "Available"`. Compare technical specifications if provided.
+3. If similar items exist in the database but are currently `"status": "Assigned"`, evaluate if they can be easily reallocated, or if we must proceed with a new purchase.
+4. **Crucial Rule**: The presence of assigned or existing assets in the database is a key factor to analyze, but it must **NOT** be the sole reason to deny a request. If the employee's justification is highly convincing (e.g., standard lifecycle upgrade or device mismatch), favor employee productivity and recommend a new purchase or reallocation as appropriate.
 
 Expected JSON output format:
 ```json
