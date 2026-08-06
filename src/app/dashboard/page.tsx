@@ -1630,12 +1630,17 @@ export default function Dashboard() {
                       </div>
 
                       <ul style={{ paddingLeft: "18px", listStyleType: "disc", fontSize: "14px", color: "#5d4037", display: "flex", flexDirection: "column", gap: "6px" }}>
-                        <li>Existing laptop is 4 years old (Fair condition) and no longer meets AI workloads.</li>
-                        <li>No suitable replacement assets currently available in inventory.</li>
-                        <li>Department "AI Research" budget has sufficient allocated balance.</li>
-                        <li>Dell Precision Laptop recommended based on lowest cost, full warranty, and shortest delivery.</li>
-                        <li>Standard IT procurement policies are fully satisfied.</li>
-                        <li>Risk assessment: Low risk. No duplicate requests or suspicious pricing detected.</li>
+                        {workflowLogs
+                          .filter(log => log.agentName !== "Notification Agent" && log.agentName !== "Recommendation Agent")
+                          .map((log, idx) => (
+                            <li key={idx}>
+                              <strong>{log.agentName}:</strong> {log.reasoning}
+                            </li>
+                          ))
+                        }
+                        {workflowLogs.filter(log => log.agentName !== "Notification Agent" && log.agentName !== "Recommendation Agent").length === 0 && (
+                          <li>AI Coordinator agents are compiling audit results...</li>
+                        )}
                       </ul>
                     </div>
 
