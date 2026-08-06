@@ -1,0 +1,625 @@
+/* Dashboard Page Custom Styling */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background-color: var(--background);
+  color: var(--on-background);
+  padding-bottom: 96px;
+  /* Space for mobile nav */
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-bottom: 0;
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  padding: 0 var(--spacing-md);
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+  transition: colors 0.2s ease;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease;
+}
+
+.brand:hover {
+  background-color: var(--surface-container-low);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 1px solid var(--outline-variant);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.bellButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+.bellButton:hover {
+  background-color: var(--surface-container-low);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--error);
+  border-radius: var(--radius-full);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Sections */
+.welcomeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.welcomeTitle {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.welcomeSub {
+  font-family: var(--font-body);
+  font-size: 18px;
+  color: var(--on-surface-variant);
+}
+
+/* Actions Section */
+.actionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.sectionHeader {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-cols: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .actionsGrid {
+    grid-template-cols: repeat(4, 1fr);
+  }
+}
+
+.actionButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  gap: var(--spacing-sm);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.actionButton:hover {
+  background-color: var(--surface-container-low);
+  border-color: var(--outline);
+}
+
+.actionIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.actionButton:hover .actionIconWrapper {
+  transform: scale(1.1);
+}
+
+.actionText {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+/* Bento Cards */
+.bentoSection {
+  display: grid;
+  grid-template-cols: 1fr;
+  gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .bentoSection {
+    grid-template-cols: repeat(3, 1fr);
+  }
+}
+
+.bentoCard {
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.bentoCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  border-color: var(--outline);
+}
+
+.bentoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bentoTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.bentoTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.bentoChevron {
+  padding: 4px;
+  border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+.bentoChevron:hover {
+  background-color: var(--surface-container-low);
+}
+
+.bentoBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bentoBodyCenter {
+  text-align: center;
+  padding: var(--spacing-sm) 0;
+}
+
+.bentoValue {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.bentoSubvalue {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--on-surface-variant);
+}
+
+.bentoBodyGrid {
+  display: grid;
+  grid-template-cols: 1fr 1fr;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+}
+
+.balanceBlock {
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.balanceValue {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.balanceLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  text-align: center;
+}
+
+.bentoBodyProgress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 8px;
+  background-color: var(--surface-container-highest);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.bentoFooter {
+  border-top: 1px solid var(--outline-variant);
+  padding-top: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.bentoTag {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-container-highest);
+}
+
+/* Updates Section */
+.updatesSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.updatesCard {
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.updateItem {
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: start;
+  gap: var(--spacing-md);
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--outline-variant);
+  animation: slideIn 0.3s ease;
+}
+
+.updateItem:last-child {
+  border-bottom: none;
+}
+
+.updateItem:hover {
+  background-color: var(--surface-container-low);
+  cursor: pointer;
+}
+
+.updateIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-container-highest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-variant);
+  flex-shrink: 0;
+}
+
+.updateContent {
+  flex: 1;
+}
+
+.updateHeader {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.updateText {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+}
+
+.updateTime {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 8px;
+  display: block;
+}
+
+/* Bottom Nav (Mobile Only) */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background-color: var(--surface);
+  border-top: 1px solid var(--outline-variant);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 40;
+  padding: 0 var(--spacing-md) env(safe-area-inset-bottom) var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .bottomNav {
+    display: none;
+  }
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: 4px var(--spacing-md);
+  border-radius: var(--radius-full);
+  color: var(--on-secondary-fixed-variant);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.navButtonActive {
+  background-color: var(--secondary-container);
+  color: var(--on-secondary-container);
+}
+
+.navButton:hover {
+  background-color: var(--surface-container-low);
+}
+
+.navButtonText {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Modal styling */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 500px;
+  margin: var(--spacing-md);
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalHeader {
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.modalClose {
+  padding: 6px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.modalClose:hover {
+  background-color: var(--surface-container);
+}
+
+.modalBody {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.formLabel {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+.formInput,
+.formSelect {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background-color: var(--background);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: var(--primary);
+}
+
+.modalFooter {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  border-top: 1px solid var(--outline-variant);
+}
+
+.btnPrimary {
+  padding: 10px 20px;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  transition: opacity 0.2s ease;
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+.btnSecondary {
+  padding: 10px 20px;
+  background-color: var(--surface-container);
+  color: var(--on-surface);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid var(--outline-variant);
+  transition: background-color 0.2s ease;
+}
+
+.btnSecondary:hover {
+  background-color: var(--surface-container-highest);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

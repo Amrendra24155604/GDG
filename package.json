@@ -1,5 +1,5 @@
 {
-  "name": "temp",
+  "name": "gdg",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,12 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "mongoose": "^9.9.1",
     "next": "16.3.0",
+    "nodemailer": "^9.0.4",
+    "openai": "^7.4.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
