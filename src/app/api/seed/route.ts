@@ -12,7 +12,9 @@ import {
   AuditLog,
   PurchaseOrder,
   Notification,
-  LeaveRequest
+  LeaveRequest,
+  ExpenseClaim,
+  ExpensePolicy
 } from "@/lib/models";
 
 export async function GET() {
@@ -29,6 +31,8 @@ export async function GET() {
     // Clean logs/requests too so we have a clean slate
     await ProcurementRequest.deleteMany({});
     await LeaveRequest.deleteMany({});
+    await ExpenseClaim.deleteMany({});
+    await ExpensePolicy.deleteMany({});
     await AIWorkflowLog.deleteMany({});
     await AuditLog.deleteMany({});
     await PurchaseOrder.deleteMany({});
@@ -331,6 +335,37 @@ export async function GET() {
         requiresQuotation: true,
         approvalLevels: 2,
         allowedVendors: ["Steelcase Office Supplies"]
+      }
+    ]);
+
+    // 8. Seed Expense Policies (for RAG Retrieval)
+    await ExpensePolicy.insertMany([
+      {
+        category: "Travel",
+        maxLimitPerTrip: 2000,
+        monthlyLimit: 25000,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "Taxi and Local Travel Reimbursement Policy",
+        rules: [
+          "Maximum ₹2,000 per trip allowed for taxi/rideshare reimbursement",
+          "Itemized valid receipt is mandatory",
+          "Business purpose (e.g. client visit, site commute) must be specified",
+          "Personal travel expenses are strictly non-reimbursable"
+        ]
+      },
+      {
+        category: "Cloud / Software",
+        maxLimitPerTrip: 10000,
+        monthlyLimit: 50000,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "SaaS & Cloud Infrastructure Policy",
+        rules: [
+          "Development & Infrastructure cloud charges up to ₹10,000 per transaction allowed",
+          "Receipt / Invoice required",
+          "Business purpose development infrastructure required"
+        ]
       }
     ]);
 

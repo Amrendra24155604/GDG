@@ -102,19 +102,36 @@ export default function Dashboard() {
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [recentUpdates, setRecentUpdates] = useState<UpdateItem[]>([]);
 
+  // Dynamic Leave Requests
+  const [leaves, setLeaves] = useState<any[]>([]);
+  const [selectedLeave, setSelectedLeave] = useState<any | null>(null);
+  const [leaveWorkflowLogs, setLeaveWorkflowLogs] = useState<WorkflowLog[]>([]);
+  const [expenseWorkflowLogs, setExpenseWorkflowLogs] = useState<WorkflowLog[]>([]);
+  const [claims, setClaims] = useState<any[]>([]);
+  const [selectedClaim, setSelectedClaim] = useState<any | null>(null);
+  const [workflowType, setWorkflowType] = useState<"procurement" | "leave" | "expense">("procurement");
+  const [leaveHalfDay, setLeaveHalfDay] = useState(false);
+  const [leaveOptionalNote, setLeaveOptionalNote] = useState("");
+  const [leaveManagerComments, setLeaveManagerComments] = useState("");
+  const [leaveClarifyResponse, setLeaveClarifyResponse] = useState("");
+  const leavePollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Modals (Portal view)
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isProcureModalOpen, setIsProcureModalOpen] = useState(false);
 
   // Form inputs (Portal view)
-  const [leaveType, setLeaveType] = useState("Annual Leave");
+  const [leaveType, setLeaveType] = useState("Casual Leave");
   const [leaveStart, setLeaveStart] = useState("");
   const [leaveEnd, setLeaveEnd] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
-  const [expenseCategory, setExpenseCategory] = useState("Meals");
+  const [expenseCategory, setExpenseCategory] = useState("Travel");
   const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseDate, setExpenseDate] = useState("2026-08-05");
   const [expenseDesc, setExpenseDesc] = useState("");
+  const [expensePaymentMethod, setExpensePaymentMethod] = useState("Personal Card");
+  const [expenseReceiptFile, setExpenseReceiptFile] = useState("receipt.jpg");
 
   // Procurement Form (Portal view)
   const [procureItem, setProcureItem] = useState("");
@@ -326,11 +343,99 @@ export default function Dashboard() {
     };
   }, [selectedRequest?._id, selectedRequest?.currentStatus]);
 
+  // Dynamic Polling for Leave AI Pipeline
+  useEffect(() => {
+    if (leavePollingIntervalRef.current) {
+      clearInterval(leavePollingIntervalRef.current);
+    }
+
+    if (!selectedLeave) return;
+
+    const shouldPoll =
+      selectedLeave.currentStatus === "Submitted" ||
+      selectedLeave.currentStatus === "AI Processing";
+
+    if (shouldPoll) {
+      leavePollingIntervalRef.current = setInterval(async () => {
+        try {
+          let lRes;
+          if (portalViewRole === "Employee") {
+            lRes = await fetch("/api/leave/my-requests?employeeId=" + currentUser.employeeId);
+          } else {
+            lRes = await fetch("/api/leave/request");
+          }
+          const lData = await lRes.json();
+          if (lData.success) {
+            const currentL = lData.requests.find((r: any) => r._id === selectedLeave._id);
+            if (currentL) {
+              setSelectedLeave(currentL);
+              if (currentL.currentStatus !== "Submitted" && currentL.currentStatus !== "AI Processing") {
+                if (leavePollingIntervalRef.current) {
+                  clearInterval(leavePollingIntervalRef.current);
+                }
+                refreshDashboardData();
+              }
+            }
+          }
+
+          const logRes = await fetch("/api/leave/workflow?requestId=" + selectedLeave._id);
+          const logData = await logRes.json();
+          if (logData.success) {
+            setLeaveWorkflowLogs(logData.logs);
+          }
+        } catch (e) {
+          console.error("Polling leave logs error:", e);
+        }
+      }, 1500);
+    } else {
+      const fetchOnce = async () => {
+        try {
+          const logRes = await fetch("/api/leave/workflow?requestId=" + selectedLeave._id);
+          const logData = await logRes.json();
+          if (logData.success) {
+            setLeaveWorkflowLogs(logData.logs);
+          }
+        } catch (e) {
+          console.error("Fetch leave logs error:", e);
+        }
+      };
+      fetchOnce();
+    }
+
+    return () => {
+      if (leavePollingIntervalRef.current) {
+        clearInterval(leavePollingIntervalRef.current);
+      }
+    };
+  }, [selectedLeave?._id, selectedLeave?.currentStatus]);
+
+  // Live polling for selected expense claim workflow logs
+  useEffect(() => {
+    if (!selectedClaim?._id) return;
+    const fetchLogs = async () => {
+      try {
+        const res = await fetch("/api/expense/workflow?requestId=" + selectedClaim._id);
+        const data = await res.json();
+        if (data.success) {
+          setExpenseWorkflowLogs(data.logs);
+        }
+      } catch (e) {
+        console.error("Expense log polling error:", e);
+      }
+    };
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 1500);
+    return () => clearInterval(interval);
+  }, [selectedClaim?._id, selectedClaim?.currentStatus]);
+
   // Logout handler
   const handleLogout = () => {
     localStorage.removeItem("user");
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
+    }
+    if (leavePollingIntervalRef.current) {
+      clearInterval(leavePollingIntervalRef.current);
     }
     router.push("/login");
   };
@@ -344,13 +449,52 @@ export default function Dashboard() {
       let res;
       // Filter by Employee or Manager depending on visual simulator tab
       if (portalViewRole === "Employee") {
-        res = await fetch(`/api/procurement/my-requests?employeeId=${currentUser.employeeId}`);
+        res = await fetch("/api/procurement/my-requests?employeeId=" + currentUser.employeeId);
       } else {
         res = await fetch("/api/procurement/request"); // Manager/Admin lists all
       }
       const data = await res.json();
       if (data.success) {
         setRequests(data.requests);
+      }
+
+      // Fetch leaves
+      let lRes;
+      if (portalViewRole === "Employee") {
+        lRes = await fetch("/api/leave/my-requests?employeeId=" + currentUser.employeeId);
+      } else {
+        lRes = await fetch("/api/leave/request");
+      }
+      const lData = await lRes.json();
+      if (lData.success) {
+        setLeaves(lData.requests);
+      }
+
+      // Fetch expense claims
+      let cRes;
+      if (portalViewRole === "Employee") {
+        cRes = await fetch("/api/expense/claim?employeeId=" + currentUser.employeeId);
+      } else {
+        cRes = await fetch("/api/expense/claim");
+      }
+      const cData = await cRes.json();
+      if (cData.success) {
+        setClaims(cData.claims);
+      }
+
+      // Refresh current user profile details to get updated leave balances
+      const uRes = await fetch("/api/developer/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collectionName: "User" })
+      });
+      const uData = await uRes.json();
+      if (uData.success) {
+        const freshUser = uData.documents.find((u: any) => u.employeeId === currentUser.employeeId);
+        if (freshUser) {
+          setCurrentUser(freshUser);
+          localStorage.setItem("user", JSON.stringify(freshUser));
+        }
       }
 
       // Fetch AI Research budget
@@ -558,16 +702,206 @@ export default function Dashboard() {
     }
   };
 
-  const handleLeaveSubmit = (e: React.FormEvent) => {
+  const handleLeaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showCustomAlert("Leave Submitted", "Leave request submitted successfully (Mock).");
-    setIsLeaveModalOpen(false);
+    if (!leaveStart || !leaveEnd || !leaveReason || !currentUser) {
+      showCustomAlert("Input Error", "Please provide start date, end date, and reason.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/leave/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: currentUser.employeeId,
+          managerId: currentUser.managerId || "EMP-002",
+          leaveType,
+          startDate: leaveStart,
+          endDate: leaveEnd,
+          reason: leaveReason,
+          halfDay: leaveHalfDay,
+          optionalNote: leaveOptionalNote
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsLeaveModalOpen(false);
+        setLeaveStart("");
+        setLeaveEnd("");
+        setLeaveReason("");
+        setLeaveHalfDay(false);
+        setLeaveOptionalNote("");
+        await refreshDashboardData();
+        setSelectedLeave(data.request);
+        setLeaveWorkflowLogs([]);
+        setWorkflowType("leave");
+      } else {
+        showCustomAlert("Submission Failed", data.error);
+      }
+    } catch (err: any) {
+      showCustomAlert("Error", err.message);
+    }
   };
 
-  const handleExpenseSubmit = (e: React.FormEvent) => {
+  const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showCustomAlert("Expense Submitted", "Expense report submitted successfully (Mock).");
-    setIsExpenseModalOpen(false);
+    if (!expenseAmount || !expenseDate || !expenseDesc || !currentUser) {
+      showCustomAlert("Input Error", "Please provide amount, date, description and upload receipt.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/expense/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: currentUser.employeeId,
+          managerId: currentUser.managerId || "EMP-002",
+          expenseType: expenseCategory,
+          amount: parseFloat(expenseAmount),
+          date: expenseDate,
+          description: expenseDesc,
+          paymentMethod: expensePaymentMethod,
+          receiptFileName: expenseReceiptFile || "receipt.jpg",
+          receiptUrl: "/uploads/uber_receipt.jpg"
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsExpenseModalOpen(false);
+        setExpenseAmount("");
+        setExpenseDesc("");
+        await refreshDashboardData();
+        setSelectedClaim(data.claim);
+        setExpenseWorkflowLogs([]);
+        setWorkflowType("expense");
+        showCustomAlert("Success", "Expense claim submitted. Multi-agent OCR & RAG audit initiated.");
+      } else {
+        showCustomAlert("Validation Warning", data.error);
+      }
+    } catch (err: any) {
+      showCustomAlert("Error", err.message);
+    }
+  };
+
+  const handleLeaveApprove = async () => {
+    if (!selectedLeave || actionLoading || !currentUser) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/leave/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedLeave._id,
+          managerId: currentUser.employeeId,
+          comments: leaveManagerComments || "Approved based on multi-agent operational risk evaluation."
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeaveManagerComments("");
+        setSelectedLeave(data.request);
+        refreshDashboardData();
+        showCustomAlert("Approved", "Leave request has been successfully approved.");
+      } else {
+        showCustomAlert("Approval Failed", data.error);
+      }
+    } catch (e: any) {
+      showCustomAlert("Error", e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLeaveReject = async () => {
+    if (!selectedLeave || actionLoading || !currentUser) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/leave/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedLeave._id,
+          managerId: currentUser.employeeId,
+          decision: "Rejected",
+          comments: leaveManagerComments || "Rejected."
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeaveManagerComments("");
+        setSelectedLeave(data.request);
+        refreshDashboardData();
+        showCustomAlert("Rejected", "Leave request has been rejected.");
+      } else {
+        showCustomAlert("Rejection Failed", data.error);
+      }
+    } catch (e: any) {
+      showCustomAlert("Error", e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLeaveClarify = async () => {
+    if (!selectedLeave || !leaveManagerComments || actionLoading || !currentUser) {
+      showCustomAlert("Input Required", "Please provide comments outlining the clarification required.");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/leave/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedLeave._id,
+          managerId: currentUser.employeeId,
+          decision: "Clarification Requested",
+          comments: leaveManagerComments
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeaveManagerComments("");
+        setSelectedLeave(data.request);
+        refreshDashboardData();
+        showCustomAlert("Success", "Clarification requested from employee.");
+      } else {
+        showCustomAlert("Failed", data.error);
+      }
+    } catch (e: any) {
+      showCustomAlert("Error", e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleLeaveClarifyResponse = async () => {
+    if (!selectedLeave || !leaveClarifyResponse || actionLoading || !currentUser) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/leave/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedLeave._id,
+          responseText: leaveClarifyResponse
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLeaveClarifyResponse("");
+        setSelectedLeave(data.request);
+        setLeaveWorkflowLogs([]);
+        refreshDashboardData();
+        showCustomAlert("Clarified", "Response submitted. Re-initiating AI validation loop.");
+      } else {
+        showCustomAlert("Failed", data.error);
+      }
+    } catch (e: any) {
+      showCustomAlert("Error", e.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const pendingRequests = requests.filter(
@@ -689,37 +1023,33 @@ export default function Dashboard() {
 
   const deleteDocument = async () => {
     if (!selectedDocument) return;
-    showCustomConfirm(
-      "Delete Document",
-      "Are you sure you want to permanently delete this document?",
-      async () => {
-        setDbEditorSuccess("");
-        setDbEditorError("");
+    const confirmed = window.confirm('Are you sure you want to permanently delete this document?');
+    if (!confirmed) return;
 
-        try {
-          const res = await fetch("/api/developer/update-doc", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              collectionName: selectedCollection,
-              action: "delete",
-              docId: selectedDocument._id
-            })
-          });
-          const data = await res.json();
-          if (data.success) {
-            setDbEditorSuccess("Document deleted successfully from MongoDB.");
-            setSelectedDocument(null);
-            setDocumentJsonText("");
-            fetchDocuments(selectedCollection);
-          } else {
-            setDbEditorError("Delete failed: " + data.error);
-          }
-        } catch (e: any) {
-          setDbEditorError("Error: " + e.message);
-        }
+    setDbEditorSuccess('');
+    setDbEditorError('');
+    try {
+      const res = await fetch('/api/developer/update-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          collectionName: selectedCollection,
+          action: 'delete',
+          docId: selectedDocument._id
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDbEditorSuccess('Document deleted successfully from MongoDB.');
+        setSelectedDocument(null);
+        setDocumentJsonText('');
+        fetchDocuments(selectedCollection);
+      } else {
+        setDbEditorError('Delete failed: ' + data.error);
       }
-    );
+    } catch (e: any) {
+      setDbEditorError('Error: ' + e.message);
+    }
   };
 
   const showCreateDocumentTemplate = () => {
@@ -1277,9 +1607,15 @@ export default function Dashboard() {
     );
   }
 
-  // =========================================================================
-  // VIEW RENDER: STANDARD EMPLOYEE/MANAGER VIEW
-  // =========================================================================
+  const totalLeaveBalance = (currentUser.leaveBalance?.casualLeave || 0) + 
+                            (currentUser.leaveBalance?.sickLeave || 0) + 
+                            (currentUser.leaveBalance?.earnedLeave || 0);
+  const pendingLeavesCount = leaves.filter((l) => ["Submitted", "AI Processing", "Pending Manager"].includes(l.currentStatus)).length;
+  const upcomingApprovedLeave = leaves.find((l) => l.currentStatus === "Approved");
+  const upcomingText = upcomingApprovedLeave 
+    ? "Upcoming: " + new Date(upcomingApprovedLeave.startDate).toLocaleDateString() + " - " + new Date(upcomingApprovedLeave.endDate).toLocaleDateString()
+    : "No upcoming approved leaves";
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -1407,17 +1743,17 @@ export default function Dashboard() {
             <div className={styles.bentoBody}>
               <div className={styles.bentoBodyGrid}>
                 <div className={styles.balanceBlock} style={{ backgroundColor: "var(--primary-fixed)" }}>
-                  <span className={styles.balanceValue} style={{ color: "var(--on-primary-fixed-variant)" }}>14</span>
+                  <span className={styles.balanceValue} style={{ color: "var(--on-primary-fixed-variant)" }}>{totalLeaveBalance}</span>
                   <span className={styles.balanceLabel}>Days Balance</span>
                 </div>
                 <div className={styles.balanceBlock} style={{ backgroundColor: "var(--surface-container)" }}>
-                  <span className={styles.balanceValue} style={{ color: "var(--on-surface)" }}>1</span>
+                  <span className={styles.balanceValue} style={{ color: "var(--on-surface)" }}>{pendingLeavesCount}</span>
                   <span className={styles.balanceLabel}>Pending Request</span>
                 </div>
               </div>
             </div>
             <div className={styles.bentoFooter}>
-              <span>Upcoming: Nov 24 - Nov 28</span>
+              <span>{upcomingText}</span>
             </div>
           </div>
 
@@ -1455,72 +1791,265 @@ export default function Dashboard() {
 
         <section style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }} className="md:grid-cols-3">
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }} className="md:col-span-1">
+            <div style={{ display: "flex", borderBottom: "1px solid var(--outline-variant)", marginBottom: "4px", gap: "12px" }}>
+              <button
+                onClick={() => setWorkflowType("procurement")}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  fontWeight: "bold",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  borderBottom: workflowType === "procurement" ? "3px solid var(--primary)" : "none",
+                  color: workflowType === "procurement" ? "var(--primary)" : "var(--on-surface-variant)",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Procurement
+              </button>
+              <button
+                onClick={() => setWorkflowType("leave")}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  fontWeight: "bold",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  borderBottom: workflowType === "leave" ? "3px solid var(--primary)" : "none",
+                  color: workflowType === "leave" ? "var(--primary)" : "var(--on-surface-variant)",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Leaves
+              </button>
+              <button
+                onClick={() => setWorkflowType("expense")}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  fontWeight: "bold",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  borderBottom: workflowType === "expense" ? "3px solid var(--primary)" : "none",
+                  color: workflowType === "expense" ? "var(--primary)" : "var(--on-surface-variant)",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                Expenses
+              </button>
+            </div>
+
             <h2 className={styles.sectionHeader}>
-              {portalViewRole === "Employee" ? "My Requests" : "All Requests for Review"}
+              {workflowType === "procurement"
+                ? (portalViewRole === "Employee" ? "My Orders" : "All Orders for Review")
+                : workflowType === "leave"
+                ? (portalViewRole === "Employee" ? "My Leaves" : "All Leaves for Review")
+                : (portalViewRole === "Employee" ? "My Expenses" : "All Expense Claims")}
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {requests.length === 0 ? (
-                <div style={{ padding: "32px", textAlign: "center", border: "1px dashed var(--outline-variant)", borderRadius: "12px", color: "var(--on-surface-variant)" }}>
-                  No requests submitted yet. Use "New Order" to create one.
-                </div>
+              {workflowType === "procurement" ? (
+                requests.length === 0 ? (
+                  <div style={{ padding: "32px", textAlign: "center", border: "1px dashed var(--outline-variant)", borderRadius: "12px", color: "var(--on-surface-variant)" }}>
+                    No requests submitted yet. Use "New Order" to create one.
+                  </div>
+                ) : (
+                  requests.map((r) => {
+                    const isSelected = selectedRequest?._id === r._id;
+                    let statusBg = "var(--surface-container-highest)";
+                    let statusColor = "var(--on-surface-variant)";
+
+                    if (r.currentStatus === "Approved" || r.currentStatus === "Purchase Ordered" || r.currentStatus === "Delivered") {
+                      statusBg = "#e8f5e9";
+                      statusColor = "#2e7d32";
+                    } else if (r.currentStatus === "Rejected") {
+                      statusBg = "#ffeacc";
+                      statusColor = "#c62828";
+                    } else if (r.currentStatus === "AI Processing") {
+                      statusBg = "#e3f2fd";
+                      statusColor = "#1565c0";
+                    }
+
+                    return (
+                      <div
+                        key={r._id}
+                        onClick={() => setSelectedRequest(r)}
+                        style={{
+                          padding: "16px",
+                          backgroundColor: isSelected ? "var(--surface-container-high)" : "var(--surface)",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--outline-variant)",
+                          borderRadius: "12px",
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: "bold" }}>
+                            {r.requestNumber}
+                          </span>
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: "99px",
+                              fontSize: "11px",
+                              fontWeight: "bold",
+                              backgroundColor: statusBg,
+                              color: statusColor
+                            }}
+                          >
+                            {r.currentStatus}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: "bold" }}>{r.itemName}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
+                          <span>Qty: {r.quantity} | Cost: ₹{r.estimatedCost.toLocaleString()}</span>
+                          <span>Priority: {r.priority}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )
+              ) : workflowType === "leave" ? (
+                leaves.length === 0 ? (
+                  <div style={{ padding: "32px", textAlign: "center", border: "1px dashed var(--outline-variant)", borderRadius: "12px", color: "var(--on-surface-variant)" }}>
+                    No leave requests submitted yet. Use "Request Leave" to submit.
+                  </div>
+                ) : (
+                  leaves.map((l) => {
+                    const isSelected = selectedLeave?._id === l._id;
+                    let statusBg = "var(--surface-container-highest)";
+                    let statusColor = "var(--on-surface-variant)";
+
+                    if (l.currentStatus === "Approved") {
+                      statusBg = "#e8f5e9";
+                      statusColor = "#2e7d32";
+                    } else if (l.currentStatus === "Rejected") {
+                      statusBg = "#ffeacc";
+                      statusColor = "#c62828";
+                    } else if (l.currentStatus === "AI Processing" || l.currentStatus === "Submitted") {
+                      statusBg = "#e3f2fd";
+                      statusColor = "#1565c0";
+                    } else if (l.currentStatus === "Clarification Requested") {
+                      statusBg = "#fff3e0";
+                      statusColor = "#e65100";
+                    }
+
+                    return (
+                      <div
+                        key={l._id}
+                        onClick={() => setSelectedLeave(l)}
+                        style={{
+                          padding: "16px",
+                          backgroundColor: isSelected ? "var(--surface-container-high)" : "var(--surface)",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--outline-variant)",
+                          borderRadius: "12px",
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: "bold" }}>
+                            {l.leaveNumber}
+                          </span>
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: "99px",
+                              fontSize: "11px",
+                              fontWeight: "bold",
+                              backgroundColor: statusBg,
+                              color: statusColor
+                            }}
+                          >
+                            {l.currentStatus}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: "bold" }}>{l.leaveType}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
+                          <span>
+                            {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()}
+                          </span>
+                          <span>Half Day: {l.halfDay ? "Yes" : "No"}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )
               ) : (
-                requests.map((r) => {
-                  const isSelected = selectedRequest?._id === r._id;
-                  let statusBg = "var(--surface-container-highest)";
-                  let statusColor = "var(--on-surface-variant)";
+                claims.length === 0 ? (
+                  <div style={{ padding: "32px", textAlign: "center", border: "1px dashed var(--outline-variant)", borderRadius: "12px", color: "var(--on-surface-variant)" }}>
+                    No expense claims submitted yet. Use "Submit Expense" to create one.
+                  </div>
+                ) : (
+                  claims.map((c) => {
+                    const isSelected = selectedClaim?._id === c._id;
+                    let statusBg = "var(--surface-container-highest)";
+                    let statusColor = "var(--on-surface-variant)";
 
-                  if (r.currentStatus === "Approved" || r.currentStatus === "Purchase Ordered" || r.currentStatus === "Delivered") {
-                    statusBg = "#e8f5e9";
-                    statusColor = "#2e7d32";
-                  } else if (r.currentStatus === "Rejected") {
-                    statusBg = "#ffeacc";
-                    statusColor = "#c62828";
-                  } else if (r.currentStatus === "AI Processing") {
-                    statusBg = "#e3f2fd";
-                    statusColor = "#1565c0";
-                  }
+                    if (c.currentStatus === "Approved" || c.currentStatus === "Payment Completed") {
+                      statusBg = "#e8f5e9";
+                      statusColor = "#2e7d32";
+                    } else if (c.currentStatus === "Rejected") {
+                      statusBg = "#ffeacc";
+                      statusColor = "#c62828";
+                    } else if (c.currentStatus === "AI Processing" || c.currentStatus === "Submitted") {
+                      statusBg = "#e3f2fd";
+                      statusColor = "#1565c0";
+                    } else if (c.currentStatus === "Pending Manager") {
+                      statusBg = "#fff3e0";
+                      statusColor = "#e65100";
+                    }
 
-                  return (
-                    <div
-                      key={r._id}
-                      onClick={() => setSelectedRequest(r)}
-                      style={{
-                        padding: "16px",
-                        backgroundColor: isSelected ? "var(--surface-container-high)" : "var(--surface)",
-                        border: isSelected ? "2px solid var(--primary)" : "1px solid var(--outline-variant)",
-                        borderRadius: "12px",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: "bold" }}>
-                          {r.requestNumber}
-                        </span>
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            borderRadius: "99px",
-                            fontSize: "11px",
-                            fontWeight: "bold",
-                            backgroundColor: statusBg,
-                            color: statusColor
-                          }}
-                        >
-                          {r.currentStatus}
-                        </span>
+                    return (
+                      <div
+                        key={c._id}
+                        onClick={() => setSelectedClaim(c)}
+                        style={{
+                          padding: "16px",
+                          backgroundColor: isSelected ? "var(--surface-container-high)" : "var(--surface)",
+                          border: isSelected ? "2px solid var(--primary)" : "1px solid var(--outline-variant)",
+                          borderRadius: "12px",
+                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: "bold" }}>
+                            {c.claimNumber}
+                          </span>
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: "99px",
+                              fontSize: "11px",
+                              fontWeight: "bold",
+                              backgroundColor: statusBg,
+                              color: statusColor
+                            }}
+                          >
+                            {c.currentStatus}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: "bold" }}>{c.expenseType} — ₹{c.amount?.toLocaleString()}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
+                          <span>{new Date(c.date).toLocaleDateString()}</span>
+                          <span>Method: {c.paymentMethod}</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: "16px", fontWeight: "bold" }}>{r.itemName}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
-                        <span>Qty: {r.quantity} | Cost: ₹{r.estimatedCost.toLocaleString()}</span>
-                        <span>Priority: {r.priority}</span>
-                      </div>
-                    </div>
-                  );
-                })
+                    );
+                  })
+                )
               )}
             </div>
           </div>
@@ -1528,7 +2057,8 @@ export default function Dashboard() {
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }} className="md:col-span-2">
             <h2 className={styles.sectionHeader}>Live AI Workflow & Decision Brief</h2>
 
-            {selectedRequest ? (
+            {workflowType === "procurement" ? (
+              selectedRequest ? (
               <div
                 style={{
                   backgroundColor: "var(--surface)",
@@ -1942,7 +2472,519 @@ export default function Dashboard() {
                   Select an active procurement request from the list to view its real-time AI Agent execution tracking and manager decision brief.
                 </p>
               </div>
-            )}
+            )
+          ) : workflowType === "leave" ? (
+            selectedLeave ? (
+              <div
+                style={{
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--outline-variant)",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "24px"
+                }}
+              >
+                <div style={{ borderBottom: "1px solid var(--outline-variant)", paddingBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                    <div>
+                      <h3 style={{ fontSize: "22px", fontWeight: "700" }}>{selectedLeave.leaveType}</h3>
+                      <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", marginTop: "4px" }}>
+                        Requested by: Employee {selectedLeave.employeeId} on {new Date(selectedLeave.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "18px", fontWeight: "bold" }}>
+                        {Math.round((new Date(selectedLeave.endDate).getTime() - new Date(selectedLeave.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} Days
+                      </div>
+                      <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--on-surface-variant)", marginTop: "4px" }}>
+                        Status: <strong style={{ color: "var(--primary)" }}>{selectedLeave.currentStatus}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px", fontSize: "14px" }}>
+                    <div>Start Date: <strong>{new Date(selectedLeave.startDate).toLocaleDateString()}</strong></div>
+                    <div>End Date: <strong>{new Date(selectedLeave.endDate).toLocaleDateString()}</strong></div>
+                  </div>
+                  <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", fontSize: "14px" }}>
+                    <strong>Reason:</strong> "{selectedLeave.reason}"
+                  </div>
+                  {selectedLeave.optionalNote && (
+                    <div style={{ marginTop: "8px", padding: "12px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", fontSize: "14px" }}>
+                      <strong>Handover Note:</strong> "{selectedLeave.optionalNote}"
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>timeline</span>
+                    AI Leave Agent Pipeline
+                  </h4>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", position: "relative", paddingLeft: "24px" }}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "9px",
+                        top: "10px",
+                        bottom: "10px",
+                        width: "2px",
+                        backgroundColor: "var(--outline-variant)"
+                      }}
+                    />
+
+                    {[
+                      { name: "Employee Context Agent", label: "Employee Profile Retrieved" },
+                      { name: "Leave Balance Check Agent", label: "Leave Balance Checked" },
+                      { name: "Leave Policy Agent", label: "Leave Policy Validated" },
+                      { name: "Team Availability Agent", label: "Team Availability Checked" },
+                      { name: "Calendar / Conflict Agent", label: "Calendar Conflicts Checked" },
+                      { name: "Recommendation Agent", label: "Recommendation Generated" }
+                    ].map((step, idx) => {
+                      const log = leaveWorkflowLogs.find((l) => l.agentName === step.name);
+                      const isCompleted = log && log.status === "Completed";
+                      const isFailed = log && log.status === "Failed";
+
+                      const isProcessing = !log && (
+                        selectedLeave.currentStatus === "AI Processing" ||
+                        selectedLeave.currentStatus === "Submitted"
+                      ) && (
+                        idx === leaveWorkflowLogs.length
+                      );
+
+                      let stepTextColor = "var(--on-surface-variant)";
+                      let stepIcon = "circle";
+                      let iconColor = "var(--outline-variant)";
+
+                      if (isCompleted) {
+                        stepTextColor = "var(--on-surface)";
+                        stepIcon = "check_circle";
+                        iconColor = "#2e7d32";
+                      } else if (isFailed) {
+                        stepTextColor = "#ba1a1a";
+                        stepIcon = "error";
+                        iconColor = "#ba1a1a";
+                      } else if (isProcessing) {
+                        stepTextColor = "var(--on-surface)";
+                        stepIcon = "sync";
+                        iconColor = "var(--secondary)";
+                      }
+
+                      const isExpanded = expandedLogIndex === idx + 10;
+
+                      return (
+                        <div key={step.name} style={{ position: "relative" }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: "-24px",
+                              top: "2px",
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "99px",
+                              backgroundColor: "var(--surface)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              zIndex: 10
+                            }}
+                          >
+                            <span
+                              className={"material-symbols-outlined " + (isProcessing ? "animate-spin" : "")}
+                              style={{
+                                fontSize: "18px",
+                                color: iconColor,
+                                fontWeight: "bold"
+                              }}
+                            >
+                              {stepIcon}
+                            </span>
+                          </div>
+
+                          <div
+                            onClick={() => isCompleted && setExpandedLogIndex(isExpanded ? null : idx + 10)}
+                            style={{
+                              cursor: isCompleted ? "pointer" : "default",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              backgroundColor: isExpanded ? "var(--surface-container-low)" : "transparent",
+                              transition: "background-color 0.2s ease"
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "14px", fontWeight: isCompleted || isProcessing ? "bold" : "normal", color: stepTextColor }}>
+                                  {step.label}
+                              </span>
+                              {isCompleted && (
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "var(--on-surface-variant)" }}>
+                                  {isExpanded ? "expand_less" : "expand_more"}
+                                </span>
+                              )}
+                            </div>
+
+                            {isExpanded && log && (
+                              <div style={{ marginTop: "8px", borderTop: "1px solid var(--outline-variant)", paddingTop: "8px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <div style={{ color: "var(--on-surface-variant)" }}>
+                                  <strong>Agent reasoning:</strong> {log.reasoning}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedLeave.currentStatus === "AI Processing" && (
+                  <div style={{ padding: "16px", backgroundColor: "#e3f2fd", color: "#1565c0", borderRadius: "12px", display: "flex", alignItems: "center", gap: "12px", fontSize: "14px" }}>
+                    <span className="material-symbols-outlined animate-spin">sync</span>
+                    AI Agent Workflow is processing...
+                  </div>
+                )}
+
+                {selectedLeave.currentStatus === "Submitted" && (
+                  <div style={{ padding: "16px", backgroundColor: "#e3f2fd", color: "#1565c0", borderRadius: "12px", display: "flex", alignItems: "center", gap: "12px", fontSize: "14px" }}>
+                    <span className="material-symbols-outlined">schedule</span>
+                    Leave request received. Initializing AI agents...
+                  </div>
+                )}
+
+                {selectedLeave.currentStatus === "Pending Manager" && (
+                  <div style={{ padding: "16px", backgroundColor: "#fff3e0", color: "#e65100", borderRadius: "12px", display: "flex", alignItems: "center", gap: "12px", fontSize: "14px" }}>
+                    <span className="material-symbols-outlined">hourglass_empty</span>
+                    ⏳ Waiting for manager approval
+                  </div>
+                )}
+
+                {selectedLeave.aiRecommendation && (
+                  <div
+                    style={{
+                      border: "1px solid #ffe0b2",
+                      backgroundColor: "#fff8e1",
+                      borderRadius: "12px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#e65100" }}>
+                        AI Recommendation: {selectedLeave.aiRecommendation}
+                      </span>
+                      <span style={{
+                        backgroundColor: "#e65100",
+                        color: "white",
+                        padding: "2px 8px",
+                        borderRadius: "99px",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}>
+                        {selectedLeave.confidence || 100}% confidence
+                      </span>
+                    </div>
+
+                    <ul style={{ paddingLeft: "18px", listStyleType: "disc", fontSize: "14px", color: "#5d4037", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {leaveWorkflowLogs
+                        .filter(log => log.agentName !== "Notification Agent" && log.agentName !== "Recommendation Agent")
+                        .map((log, idx) => (
+                          <li key={idx}>
+                            <strong>{log.agentName}:</strong> {log.reasoning}
+                          </li>
+                        ))
+                      }
+                      {leaveWorkflowLogs.filter(log => log.agentName !== "Notification Agent" && log.agentName !== "Recommendation Agent").length === 0 && (
+                        <li>AI Coordinator agents are compiling audit results...</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {portalViewRole === "Manager" && selectedLeave.currentStatus === "Pending Manager" && (
+                  <div style={{ borderTop: "1px solid var(--outline-variant)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <label style={{ fontSize: "14px", fontWeight: "bold" }}>Manager Review Comments / Rejection Reason</label>
+                    <textarea
+                      placeholder="Add review notes, reasons for rejection, or questions for clarification..."
+                      className={styles.formInput}
+                      style={{ minHeight: "80px", resize: "none", outline: "none" }}
+                      value={leaveManagerComments}
+                      onChange={(e) => setLeaveManagerComments(e.target.value)}
+                    />
+                    <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={handleLeaveClarify}
+                        disabled={actionLoading}
+                        className={styles.btnSecondary}
+                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>help</span>
+                        Request Clarification
+                      </button>
+                      <button
+                        onClick={handleLeaveReject}
+                        disabled={actionLoading}
+                        className={styles.btnSecondary}
+                        style={{ borderColor: "#ba1a1a", color: "#ba1a1a" }}
+                      >
+                        Reject Leave
+                      </button>
+                      <button
+                        onClick={handleLeaveApprove}
+                        disabled={actionLoading}
+                        className={styles.btnPrimary}
+                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check</span>
+                        Approve Leave
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedLeave.currentStatus === "Clarification Requested" && (
+                  <div style={{ padding: "16px", backgroundColor: "#fffde7", border: "1px solid #fff59d", borderRadius: "12px", color: "#f57f17" }}>
+                    <h4 style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "bold", fontSize: "15px", margin: 0 }}>
+                      <span className="material-symbols-outlined">help</span>
+                      Clarification Requested
+                    </h4>
+                    <p style={{ fontSize: "14px", marginTop: "8px", color: "var(--on-surface-variant)" }}>
+                      The manager has requested clarification on this request. Please respond below to re-trigger analysis.
+                    </p>
+
+                    {portalViewRole === "Employee" && currentUser.employeeId === selectedLeave.employeeId && (
+                      <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <input
+                          type="text"
+                          placeholder="Type your response here..."
+                          className={styles.formInput}
+                          value={leaveClarifyResponse}
+                          onChange={(e) => setLeaveClarifyResponse(e.target.value)}
+                        />
+                        <button
+                          onClick={handleLeaveClarifyResponse}
+                          disabled={actionLoading}
+                          className={styles.btnPrimary}
+                          style={{ alignSelf: "flex-end" }}
+                        >
+                          Submit Clarification Response
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedLeave.currentStatus === "Approved" && (
+                  <div
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "#e8f5e9",
+                      border: "1px solid #c8e6c9",
+                      borderRadius: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#2e7d32" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>check_circle</span>
+                      <h4 style={{ fontSize: "18px", fontWeight: "700" }}>Leave Approved Successfully</h4>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "14px", color: "var(--on-surface-variant)" }}>
+                      Your leave balance has been successfully deducted, and notifications have been dispatched to your team and manager.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  flex: 1,
+                  border: "1px dashed var(--outline-variant)",
+                  borderRadius: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "48px",
+                  color: "var(--on-surface-variant)",
+                  textAlign: "center"
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "48px", color: "var(--outline)" }}>
+                  calendar_today
+                </span>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", marginTop: "16px" }}>No Leave Request Selected</h3>
+                <p style={{ fontSize: "14px", marginTop: "4px" }}>
+                  Select an active leave request from the list to view its real-time AI Agent execution tracking and manager decision brief.
+                </p>
+              </div>
+            )
+          ) : workflowType === "expense" ? (
+            selectedClaim ? (
+              <div
+                style={{
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--outline-variant)",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "24px"
+                }}
+              >
+                <div style={{ borderBottom: "1px solid var(--outline-variant)", paddingBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                    <div>
+                      <h3 style={{ fontSize: "22px", fontWeight: "700" }}>💰 {selectedClaim.expenseType} Claim</h3>
+                      <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", marginTop: "4px" }}>
+                        Submitted by Employee {selectedClaim.employeeId} on {new Date(selectedClaim.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "22px", fontWeight: "bold", color: "var(--primary)" }}>₹{selectedClaim.amount?.toLocaleString()}</div>
+                      <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--on-surface-variant)", marginTop: "4px" }}>
+                        Status: <strong>{selectedClaim.currentStatus}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  {selectedClaim.description && (
+                    <div style={{ marginTop: "12px", padding: "12px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", fontSize: "14px" }}>
+                      <strong>Business Purpose / Description:</strong> "{selectedClaim.description}"
+                    </div>
+                  )}
+                  {selectedClaim.receiptFileName && (
+                    <div style={{ marginTop: "8px", padding: "10px 12px", backgroundColor: "#eef2ff", borderRadius: "8px", fontSize: "13px", color: "#3730a3", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>receipt_long</span>
+                      <span><strong>Attached Receipt:</strong> {selectedClaim.receiptFileName} (OCR Extracted)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 style={{ fontWeight: "700", marginBottom: "16px", fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="material-symbols-outlined">hub</span>
+                    Multi-Agent Expense Reimbursement Audit Timeline
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative", paddingLeft: "16px" }}>
+                    {[
+                      { name: "Employee Context Agent", label: "Employee Limits & History Verified" },
+                      { name: "Receipt Agent", label: "OCR Vision Receipt Extraction" },
+                      { name: "Expense Classification Agent", label: "Auto Categorization & Purpose Match" },
+                      { name: "Expense History Agent", label: "Spending Pattern Scan" },
+                      { name: "Policy Agent", label: "RAG Expense Policy Check" },
+                      { name: "Duplicate Detection Agent", label: "Receipt Hash Fingerprint Match" },
+                      { name: "Risk Agent", label: "Multi-Factor Risk Score Calculation" },
+                      { name: "Reimbursement Recommendation Agent", label: "Final Recommendation Synthesis" }
+                    ].map((step, idx) => {
+                      const log = expenseWorkflowLogs.find((l) => l.agentName === step.name);
+                      const isCompleted = !!log;
+                      const isProcessing = selectedClaim.currentStatus === "AI Processing" && !isCompleted;
+                      const isExpanded = expandedLogIndex === idx + 20;
+
+                      return (
+                        <div key={idx} style={{ position: "relative" }}>
+                          <div
+                            onClick={() => isCompleted && setExpandedLogIndex(isExpanded ? null : idx + 20)}
+                            style={{
+                              cursor: isCompleted ? "pointer" : "default",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              backgroundColor: isExpanded ? "var(--surface-container-low)" : "transparent",
+                              transition: "background-color 0.2s ease"
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "14px", fontWeight: isCompleted || isProcessing ? "bold" : "normal" }}>
+                                {isCompleted ? `✓ ${step.label}` : isProcessing ? `⏳ Processing ${step.label}...` : step.label}
+                              </span>
+                              {isCompleted && (
+                                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                                  {isExpanded ? "expand_less" : "expand_more"}
+                                </span>
+                              )}
+                            </div>
+
+                            {isExpanded && log && (
+                              <div style={{ marginTop: "8px", borderTop: "1px solid var(--outline-variant)", paddingTop: "8px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <div><strong>Agent reasoning:</strong> {log.reasoning}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedClaim.aiRecommendation && (
+                  <div
+                    style={{
+                      border: "1px solid #ffe0b2",
+                      backgroundColor: "#fff8e1",
+                      borderRadius: "12px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#e65100" }}>
+                        💰 AI Finding: Reimbursement {selectedClaim.aiRecommendation}
+                      </span>
+                      <span style={{
+                        backgroundColor: "#e65100",
+                        color: "white",
+                        padding: "2px 8px",
+                        borderRadius: "99px",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}>
+                        {selectedClaim.confidence || 98}% confidence
+                      </span>
+                    </div>
+
+                    <ul style={{ paddingLeft: "18px", listStyleType: "disc", fontSize: "14px", color: "#5d4037", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {expenseWorkflowLogs
+                        .filter(log => log.agentName !== "Notification Agent" && log.agentName !== "Reimbursement Recommendation Agent")
+                        .map((log, idx) => (
+                          <li key={idx}>
+                            <strong>{log.agentName}:</strong> {log.reasoning}
+                          </li>
+                        ))
+                      }
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  flex: 1,
+                  border: "1px dashed var(--outline-variant)",
+                  borderRadius: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "48px",
+                  color: "var(--on-surface-variant)",
+                  textAlign: "center"
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "48px", color: "var(--outline)" }}>
+                  receipt_long
+                </span>
+                <h3 style={{ fontSize: "18px", fontWeight: "600", marginTop: "16px" }}>No Expense Claim Selected</h3>
+                <p style={{ fontSize: "14px", marginTop: "4px" }}>
+                  Select an active expense claim from the list to view its real-time AI Agent execution tracking and decision brief.
+                </p>
+              </div>
+            )
+          ) : null}
           </div>
         </section>
 
@@ -2053,16 +3095,42 @@ export default function Dashboard() {
                   <label className={styles.formLabel}>Reason</label>
                   <input
                     type="text"
+                    required
                     placeholder="Enter reason for leave..."
                     className={styles.formInput}
                     value={leaveReason}
                     onChange={(e) => setLeaveReason(e.target.value)}
                   />
                 </div>
+                <div className={styles.formGroup} style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px" }}>
+                  <input
+                    type="checkbox"
+                    id="halfDayCheckbox"
+                    checked={leaveHalfDay}
+                    onChange={(e) => setLeaveHalfDay(e.target.checked)}
+                    style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                  />
+                  <label htmlFor="halfDayCheckbox" className={styles.formLabel} style={{ margin: 0, cursor: "pointer" }}>
+                    Half Day Request
+                  </label>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Optional Handover Note</label>
+                  <textarea
+                    placeholder="Enter handover details or notes (optional)..."
+                    className={styles.formInput}
+                    style={{ minHeight: "60px", resize: "none", outline: "none" }}
+                    value={leaveOptionalNote}
+                    onChange={(e) => setLeaveOptionalNote(e.target.value)}
+                  />
+                </div>
               </div>
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setIsLeaveModalOpen(false)}>Cancel</button>
-                <button type="submit" className={styles.btnPrimary}>Submit Request</button>
+                <button type="submit" className={styles.btnPrimary} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>smart_toy</span>
+                  Initiate AI Analysis
+                </button>
               </div>
             </form>
           </div>
@@ -2071,57 +3139,114 @@ export default function Dashboard() {
 
       {isExpenseModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsExpenseModalOpen(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "540px" }}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Submit Expense</h3>
+              <h3 className={styles.modalTitle}>💰 Submit Expense Claim</h3>
               <button className={styles.modalClose} onClick={() => setIsExpenseModalOpen(false)}>
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             <form onSubmit={handleExpenseSubmit}>
               <div className={styles.modalBody}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Category</label>
-                  <select
-                    className={styles.formSelect}
-                    value={expenseCategory}
-                    onChange={(e) => setExpenseCategory(e.target.value)}
-                  >
-                    <option>Meals</option>
-                    <option>Travel</option>
-                    <option>Office Equipment</option>
-                    <option>Software/Subscriptions</option>
-                    <option>Other</option>
-                  </select>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Expense Type</label>
+                    <select
+                      className={styles.formSelect}
+                      value={expenseCategory}
+                      onChange={(e) => setExpenseCategory(e.target.value)}
+                    >
+                      <option value="Travel">Travel</option>
+                      <option value="Cloud / Software">Cloud / Software</option>
+                      <option value="Meals">Meals</option>
+                      <option value="Office Equipment">Office Equipment</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Amount (₹)</label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="1"
+                      required
+                      placeholder="e.g. 4850"
+                      className={styles.formInput}
+                      value={expenseAmount}
+                      onChange={(e) => setExpenseAmount(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Amount (₹)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    required
-                    placeholder="0.00"
-                    className={styles.formInput}
-                    value={expenseAmount}
-                    onChange={(e) => setExpenseAmount(e.target.value)}
-                  />
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Date</label>
+                    <input
+                      type="date"
+                      required
+                      className={styles.formInput}
+                      value={expenseDate}
+                      onChange={(e) => setExpenseDate(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Payment Method</label>
+                    <select
+                      className={styles.formSelect}
+                      value={expensePaymentMethod}
+                      onChange={(e) => setExpensePaymentMethod(e.target.value)}
+                    >
+                      <option value="Personal Card">Personal Card</option>
+                      <option value="Corporate Card">Corporate Card</option>
+                      <option value="Cash">Cash</option>
+                    </select>
+                  </div>
                 </div>
+
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Description</label>
+                  <label className={styles.formLabel}>Description / Business Purpose</label>
                   <input
                     type="text"
                     required
-                    placeholder="Enter expense details (e.g. Client Dinner)..."
+                    placeholder="e.g. Travel to client office in Bangalore"
                     className={styles.formInput}
                     value={expenseDesc}
                     onChange={(e) => setExpenseDesc(e.target.value)}
                   />
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Receipt ⭐ (OCR Auto-Extraction)</label>
+                  <label style={{
+                    border: "2px dashed var(--primary)",
+                    borderRadius: "8px",
+                    padding: "16px",
+                    textAlign: "center",
+                    backgroundColor: "var(--surface-container-lowest)",
+                    cursor: "pointer",
+                    display: "block"
+                  }}>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setExpenseReceiptFile(e.target.files[0].name);
+                        }
+                      }}
+                    />
+                    <span className="material-symbols-outlined" style={{ fontSize: "32px", color: "var(--primary)" }}>cloud_upload</span>
+                    <p style={{ fontSize: "13px", fontWeight: "bold", marginTop: "4px" }}>
+                      {expenseReceiptFile ? `✓ Selected: ${expenseReceiptFile}` : "Click to select receipt (.jpg, .png, .pdf)"}
+                    </p>
+                    <span style={{ fontSize: "11px", color: "var(--on-surface-variant)" }}>Receipt Agent automatically extracts Merchant, Date & Amount via Vision OCR</span>
+                  </label>
+                </div>
               </div>
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setIsExpenseModalOpen(false)}>Cancel</button>
-                <button type="submit" className={styles.btnPrimary}>Submit Expense</button>
+                <button type="submit" className={styles.btnPrimary}>Submit Claim for AI Audit</button>
               </div>
             </form>
           </div>

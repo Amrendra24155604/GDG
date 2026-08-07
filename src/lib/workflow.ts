@@ -53,3 +53,27 @@ export async function runLeaveWorkflow(leaveRequestId: string) {
     console.log(`[Leave Python Workflow exit]: Multi-agent execution finished with code ${code}`);
   });
 }
+
+export async function runExpenseWorkflow(expenseClaimId: string) {
+  const scriptPath = path.join(process.cwd(), "agents", "expense_workflow.py");
+  console.log(`Spawning Python Expense Agent workflow: python ${scriptPath} ${expenseClaimId}`);
+
+  const pythonProcess = spawn("python", [scriptPath, expenseClaimId], {
+    env: {
+      ...process.env,
+      PYTHONUNBUFFERED: "1"
+    }
+  });
+
+  pythonProcess.stdout.on("data", (data) => {
+    console.log(`[Expense Python Workflow stdout]: ${data.toString().trim()}`);
+  });
+
+  pythonProcess.stderr.on("data", (data) => {
+    console.error(`[Expense Python Workflow stderr]: ${data.toString().trim()}`);
+  });
+
+  pythonProcess.on("close", (code) => {
+    console.log(`[Expense Python Workflow exit]: Multi-agent execution finished with code ${code}`);
+  });
+}

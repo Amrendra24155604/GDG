@@ -381,3 +381,5 @@ const LeaveRequestSchema = new Schema<ILeaveRequest>(
   { timestamps: true }
 );
 export const LeaveRequest = getModel<ILeaveRequest>("LeaveRequest", LeaveRequestSchema);
+
+export * from "./expense_models";

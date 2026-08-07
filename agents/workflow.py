@@ -207,17 +207,35 @@ Estimated Cost: ₹{request.get('estimatedCost', 0)}"""
         
         asset_summary = ", ".join([f"{a.get('assetName')} ({a.get('condition')})" for a in employee_assets]) if employee_assets else "No active assets assigned."
         
+        is_unknown = (
+            employee_name == "Unknown Employee" or 
+            employee_dept == "Unknown Department" or 
+            not employee
+        )
+        emp_confidence = 0 if is_unknown else 100
+        
+        if is_unknown:
+            reasoning_msg = f"Error: Requester employee profile '{employee_id}' or department is unknown in the system database."
+        else:
+            reasoning_msg = f"Employee {employee_name} holds the role of {employee_desg} in {employee_dept} department. Current assigned assets: {asset_summary}."
+            
         db["aiworkflowlogs"].insert_one({
             "requestId": request_id_str,
             "agentName": "Employee Context Agent",
             "action": "Retrieved employee profile and current hardware list.",
-            "status": "Completed",
-            "confidence": 100,
-            "reasoning": f"Employee {employee_name} holds the role of {employee_desg} in {employee_dept} department. Current assigned assets: {asset_summary}.",
+            "status": "Failed" if is_unknown else "Completed",
+            "confidence": emp_confidence,
+            "reasoning": reasoning_msg,
             "evidence": json.dumps(employee_context),
             "executionTime": int((time.time() - start_time) * 1000),
             "timestamp": datetime.now(timezone.utc)
         })
+
+        if is_unknown:
+            db["procurementrequests"].update_one({"_id": req_id}, {"$set": {"currentStatus": "Failed", "confidence": 0, "aiRecommendation": "Insufficient Employee Data"}})
+            print("Agent 2: Employee Unknown. Exiting Workflow.")
+            sys.exit(0)
+
         print("Agent 2: Employee Context Retrieved.")
     except Exception as err:
         print(f"Agent 2 Error: {err}", file=sys.stderr)
