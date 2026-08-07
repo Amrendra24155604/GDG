@@ -115,7 +115,7 @@ Synthesize findings from all agents and generate a final recommendation decision
    - Deduct 10% if there are warnings or duplicate requests detected.
    - Deduct 10% if the vendor rating is below 3.5.
    - Deduct 5% if we can fulfill from inventory but are still purchasing a new item.
-   - Note: The final confidence score must be computed strictly using these deductions. Do not return 75% or 95% unless it is mathematically justified. Show the subtraction steps in the justification field.
+   - Note: The final confidence score must be computed strictly using these deductions. The `"confidence"` field in your JSON output must contain the EXACT integer result of this calculation. Do not output a default number (like 60 or 75 or 95) if your calculation says otherwise. Double-check that your JSON `"confidence"` integer matches the subtraction steps in your `"justification"` string EXACTLY.
 3. Produce bullet-point summaries outlining context of existing assets, budget verification, quotation comparisons, and risk evaluation.
 
 Expected JSON output format:

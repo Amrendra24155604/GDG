@@ -606,6 +606,36 @@ Risk Analysis: {json.dumps(risk_check)}"""
         if content is None:
             raise ValueError("OpenAI response content was None")
         result = json.loads(content)
+        
+        # Programmatic validation of the confidence score to prevent LLM calculation discrepancies
+        calc_confidence = 100
+        if policy_check and not policy_check.get("policyPassed", True):
+            calc_confidence -= 30
+        if budget_check and not budget_check.get("sufficient", True):
+            calc_confidence -= 25
+        
+        risk_level = risk_check.get("riskLevel", "Low") if risk_check else "Low"
+        if risk_level == "High":
+            calc_confidence -= 15
+        elif risk_level == "Medium":
+            calc_confidence -= 5
+            
+        warnings_list = risk_check.get("warnings", []) if risk_check else []
+        if len(warnings_list) > 0:
+            calc_confidence -= 10
+            
+        rec_vendor_name = vendor_analysis.get("recommendedVendor") if vendor_analysis else None
+        if rec_vendor_name:
+            v_doc = db["vendors"].find_one({"vendorName": rec_vendor_name})
+            if v_doc and v_doc.get("rating", 5.0) < 3.5:
+                calc_confidence -= 10
+                
+        if inventory_check and inventory_check.get("canFulfillFromInventory", False):
+            calc_confidence -= 5
+            
+        calc_confidence = max(0, min(100, calc_confidence))
+        result["confidence"] = calc_confidence
+        
         recommendation_details = result
         
         # Save to request
