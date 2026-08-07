@@ -24,6 +24,11 @@ export interface IUser extends Document {
   location: string;
   avatar: string;
   isActive: boolean;
+  leaveBalance?: {
+    casualLeave: number;
+    sickLeave: number;
+    earnedLeave: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +48,14 @@ const UserSchema = new Schema<IUser>(
     location: { type: String },
     avatar: { type: String },
     isActive: { type: Boolean, default: true },
+    leaveBalance: {
+      type: {
+        casualLeave: { type: Number, default: 8 },
+        sickLeave: { type: Number, default: 10 },
+        earnedLeave: { type: Number, default: 14 },
+      },
+      default: { casualLeave: 8, sickLeave: 10, earnedLeave: 14 }
+    },
   },
   { timestamps: true }
 );
@@ -332,3 +345,39 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
   createdAt: { type: Date, default: Date.now },
 });
 export const PurchaseOrder = getModel<IPurchaseOrder>("PurchaseOrder", PurchaseOrderSchema);
+
+// 14. LeaveRequest Schema
+export interface ILeaveRequest extends Document {
+  leaveNumber: string;
+  employeeId: string;
+  managerId: string;
+  leaveType: string; // "Casual Leave", "Sick Leave", "Earned Leave"
+  startDate: Date;
+  endDate: Date;
+  reason: string;
+  halfDay: boolean;
+  optionalNote?: string;
+  currentStatus: string; // "Submitted", "AI Processing", "Pending Manager", "Approved", "Rejected", "Clarification Requested"
+  aiRecommendation?: string; // "Approve", "Reject", "Review"
+  confidence?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+const LeaveRequestSchema = new Schema<ILeaveRequest>(
+  {
+    leaveNumber: { type: String, required: true, unique: true },
+    employeeId: { type: String, required: true },
+    managerId: { type: String, required: true },
+    leaveType: { type: String, required: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+    reason: { type: String, required: true },
+    halfDay: { type: Boolean, default: false },
+    optionalNote: { type: String },
+    currentStatus: { type: String, default: "Submitted" },
+    aiRecommendation: { type: String },
+    confidence: { type: Number },
+  },
+  { timestamps: true }
+);
+export const LeaveRequest = getModel<ILeaveRequest>("LeaveRequest", LeaveRequestSchema);
