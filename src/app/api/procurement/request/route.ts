@@ -87,11 +87,8 @@ export async function POST(req: NextRequest) {
       details: `Created procurement request for ${quantity}x "${itemName}" with estimated cost of ₹${estimatedCost}.`
     });
 
-    // Trigger Multi-Agent AI Workflow asynchronously in the background
-    // (do not await so the API responds immediately, and the client displays live execution)
-    runProcurementWorkflow(newRequest._id.toString()).catch((err) => {
-      console.error(`Workflow failure for request ${newRequest._id}:`, err);
-    });
+    // Trigger Multi-Agent AI Workflow
+    await runProcurementWorkflow(newRequest._id.toString());
 
     return NextResponse.json({
       success: true,

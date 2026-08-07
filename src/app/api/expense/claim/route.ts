@@ -80,10 +80,8 @@ export async function POST(req: NextRequest) {
       details: `Submitted expense claim ${claimNumber} for ${expenseType} (₹${amount})`
     });
 
-    // Trigger AI Agent Pipeline asynchronously
-    runExpenseWorkflow(newClaim._id.toString()).catch((err) => {
-      console.error(`Expense workflow error for ${newClaim._id}:`, err);
-    });
+    // Trigger AI Agent Pipeline
+    await runExpenseWorkflow(newClaim._id.toString());
 
     return NextResponse.json({
       success: true,

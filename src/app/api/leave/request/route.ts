@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
       details: `Submitted ${leaveType} from ${startDate} to ${endDate}.`
     });
 
-    // Run leave agentic pipeline in background
-    runLeaveWorkflow(newRequest._id.toString());
+    // Run leave agentic pipeline
+    await runLeaveWorkflow(newRequest._id.toString());
 
     return NextResponse.json({ success: true, request: newRequest });
   } catch (error: any) {
