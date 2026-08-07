@@ -275,7 +275,7 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
     const recommendation = (balancePassed && policyPassed) ? "Approve" : "Reject";
     const confidence = (balancePassed && policyPassed) ? 98 : 70;
     const recReasoning = (balancePassed && policyPassed)
-      - `Starting confidence: 100% - Leave balance is sufficient (${availBalance} days available) - Policy validation passed - Operational risk is Low`
+      ? `Starting confidence: 100% - Leave balance is sufficient (${availBalance} days available) - Policy validation passed - Operational risk is Low`
       : `Starting confidence: 100% - Deducted 30% for balance/policy violation.`;
 
     await logAgentExecution(
