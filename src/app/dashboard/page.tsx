@@ -219,6 +219,19 @@ export default function Dashboard() {
     // User role loaded automatically from session
   }, []);
 
+  // Prevent background scrolling when modals or popups are open
+  useEffect(() => {
+    const isAnyModalOpen = isProcureModalOpen || isLeaveModalOpen || isExpenseModalOpen || customDialog.isOpen;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isProcureModalOpen, isLeaveModalOpen, isExpenseModalOpen, customDialog.isOpen]);
+
   // Fetch collections if Developer logged in
   useEffect(() => {
     if (currentUser && currentUser.role === "Developer") {
