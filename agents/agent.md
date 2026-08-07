@@ -14,11 +14,7 @@ Categorize the procurement request item into one of the following categories:
 * Office Supplies
 * Other
 
-Evaluate the employee's justification and recommended specifications (if provided) to verify context:
-1. **Justification Validation**: Evaluate if the business justification is formal, professional, and detailed. It must explain *why* the item is needed for corporate or project operations (e.g., "To handle local ML model training with dedicated GPU," "Ergonomic chair needed for back support during long programming hours").
-2. **Reject Vague Reasons**: Mark `justificationValid: false` for vague, brief, or personal justifications such as "I need it", "needed for work", "needed", "personal use", "want it", "for my issues", or other informal/lazy phrases. Mark `justificationValid: true` if it is formal and provides a valid business use case.
-3. **Priority**: Recommend a priority (Low, Medium, High, Critical). If the justification is vague/invalid, set the recommended priority to "Low".
-4. **Estimated Cost**: Estimate the unit cost if not provided.
+Evaluate the employee's justification and recommended specifications (if provided) to verify context. Recommend a priority (Low, Medium, High, Critical). Estimate the unit cost if not provided.
 
 Expected JSON output format:
 ```json
@@ -26,7 +22,6 @@ Expected JSON output format:
   "category": "string",
   "recommendedPriority": "string",
   "estimatedUnitCost": number,
-  "justificationValid": boolean,
   "confidenceScore": number,
   "analysis": "string"
 }
@@ -111,10 +106,9 @@ Expected JSON output format:
 
 ## Recommendation Agent
 Synthesize findings from all agents and generate a final recommendation decision brief for the manager.
-1. Determine recommendation (Approve, Reject, or Need Review). If the business justification validation failed (`justificationValid: false`), you must recommend "Reject" or "Need Review" (never "Approve").
+1. Determine recommendation (Approve, Reject, or Need Review).
 2. Calculate the confidence percentage (0-100) genuinely using the following formula:
    - Start with 100% baseline.
-   - Deduct 20% if the business justification is invalid (`justificationValid: false`).
    - Deduct 30% if the policy validation fails (`policyPassed: false`).
    - Deduct 25% if the department budget is insufficient (`sufficient: false`).
    - Deduct 15% if the risk level is High, or 5% if Medium.
