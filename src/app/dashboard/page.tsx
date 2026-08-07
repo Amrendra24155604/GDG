@@ -150,6 +150,16 @@ export default function Dashboard() {
   const [dbEditorLoading, setDbEditorLoading] = useState(false);
   const [dbEditorSuccess, setDbEditorSuccess] = useState("");
   const [dbEditorError, setDbEditorError] = useState("");
+  const [newDocId, setNewDocId] = useState("");
+
+  const generateMongoId = () => {
+    const chars = "abcdef0123456789";
+    let id = "";
+    for (let i = 0; i < 24; i++) {
+      id += chars[Math.floor(Math.random() * 16)];
+    }
+    return id;
+  };
 
   // =========================================================================
   // INITIALIZATION & SESSION CHECKS
@@ -524,7 +534,9 @@ export default function Dashboard() {
 
   const selectDocumentForEditing = (doc: any) => {
     setSelectedDocument(doc);
-    setDocumentJsonText(JSON.stringify(doc, null, 2));
+    // Strip mongoose metadata fields so they are not editable in JSON
+    const { _id, __v, createdAt, updatedAt, ...editableDoc } = doc;
+    setDocumentJsonText(JSON.stringify(editableDoc, null, 2));
     setDbEditorSuccess("");
     setDbEditorError("");
   };
@@ -595,6 +607,8 @@ export default function Dashboard() {
 
   const showCreateDocumentTemplate = () => {
     // Generate default template based on collection schema
+    const nextId = generateMongoId();
+    setNewDocId(nextId);
     let template: any = {};
     if (selectedCollection === "User") {
       template = {
@@ -658,6 +672,8 @@ export default function Dashboard() {
 
     try {
       const parsedData = JSON.parse(documentJsonText);
+      // Inject the generated MongoDB ID
+      parsedData._id = newDocId;
 
       const res = await fetch("/api/developer/update-doc", {
         method: "POST",
@@ -1075,7 +1091,7 @@ export default function Dashboard() {
                 {selectedDocument ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     <div style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--on-surface-variant)" }}>
-                      Document ID: <strong>{selectedDocument._id}</strong>
+                      Document ID: <strong>{selectedDocument._id === "NEW_TEMPLATE" ? `${newDocId} (Generated)` : selectedDocument._id}</strong>
                     </div>
 
                     <textarea
