@@ -219,16 +219,38 @@ export default function Dashboard() {
     // User role loaded automatically from session
   }, []);
 
-  // Prevent background scrolling when modals or popups are open
+  // Prevent background scrolling and stretching/rubber-banding when modals or popups are open
   useEffect(() => {
     const isAnyModalOpen = isProcureModalOpen || isLeaveModalOpen || isExpenseModalOpen || customDialog.isOpen;
+    
+    const preventTouchStretch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Allow scrolling inside input/textarea fields or scrollable bodies, block general document dragging
+      if (target && target.closest(`[class*="modalBody"]`)) {
+        return;
+      }
+      e.preventDefault();
+    };
+
     if (isAnyModalOpen) {
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
+      document.addEventListener("touchmove", preventTouchStretch, { passive: false });
     } else {
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.removeEventListener("touchmove", preventTouchStretch);
     }
     return () => {
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.removeEventListener("touchmove", preventTouchStretch);
     };
   }, [isProcureModalOpen, isLeaveModalOpen, isExpenseModalOpen, customDialog.isOpen]);
 
