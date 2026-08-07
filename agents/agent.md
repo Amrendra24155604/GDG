@@ -109,6 +109,7 @@ Synthesize findings from all agents and generate a final recommendation decision
 1. Determine recommendation (Approve, Reject, or Need Review).
 2. Calculate the confidence percentage (0-100) genuinely using the following formula:
    - Start with 100% baseline.
+   - Deduct 30% if the business justification is invalid (`justificationValid: false`).
    - Deduct 30% if the policy validation fails (`policyPassed: false`).
    - Deduct 25% if the department budget is insufficient (`sufficient: false`).
    - Deduct 15% if the risk level is High, or 5% if Medium.

@@ -609,6 +609,8 @@ Risk Analysis: {json.dumps(risk_check)}"""
         
         # Programmatic validation of the confidence score to prevent LLM calculation discrepancies
         calc_confidence = 100
+        if analyzed_requirement and not analyzed_requirement.get("justificationValid", True):
+            calc_confidence -= 30
         if policy_check and not policy_check.get("policyPassed", True):
             calc_confidence -= 30
         if budget_check and not budget_check.get("sufficient", True):
