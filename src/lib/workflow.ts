@@ -29,3 +29,27 @@ export async function runProcurementWorkflow(requestId: string) {
     console.log(`[Python Workflow exit]: Multi-agent execution loop finished with code ${code}`);
   });
 }
+
+export async function runLeaveWorkflow(leaveRequestId: string) {
+  const scriptPath = path.join(process.cwd(), "agents", "leave_workflow.py");
+  console.log(`Spawning Python Leave Agent workflow: python ${scriptPath} ${leaveRequestId}`);
+
+  const pythonProcess = spawn("python", [scriptPath, leaveRequestId], {
+    env: {
+      ...process.env,
+      PYTHONUNBUFFERED: "1"
+    }
+  });
+
+  pythonProcess.stdout.on("data", (data) => {
+    console.log(`[Leave Python Workflow stdout]: ${data.toString().trim()}`);
+  });
+
+  pythonProcess.stderr.on("data", (data) => {
+    console.error(`[Leave Python Workflow stderr]: ${data.toString().trim()}`);
+  });
+
+  pythonProcess.on("close", (code) => {
+    console.log(`[Leave Python Workflow exit]: Multi-agent execution finished with code ${code}`);
+  });
+}
