@@ -46,6 +46,15 @@ interface WorkflowLog {
   timestamp: string;
 }
 
+interface CustomDialogState {
+  isOpen: boolean;
+  type: "alert" | "confirm";
+  title: string;
+  message: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+}
+
 const getAvatarColor = (name: string) => {
   const colors = [
     "#1a73e8", // Google Blue
@@ -160,6 +169,39 @@ export default function Dashboard() {
       id += chars[Math.floor(Math.random() * 16)];
     }
     return id;
+  };
+
+  const [customDialog, setCustomDialog] = useState<CustomDialogState>({
+    isOpen: false,
+    type: "alert",
+    title: "",
+    message: ""
+  });
+
+  const showCustomAlert = (title: string, message: string) => {
+    setCustomDialog({
+      isOpen: true,
+      type: "alert",
+      title,
+      message
+    });
+  };
+
+  const showCustomConfirm = (title: string, message: string, onConfirm: () => void, onCancel?: () => void) => {
+    setCustomDialog({
+      isOpen: true,
+      type: "confirm",
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setCustomDialog(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        if (onCancel) onCancel();
+        setCustomDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   // =========================================================================
@@ -350,38 +392,43 @@ export default function Dashboard() {
         setWorkflowLogs([]);
         setNotificationsCount(prev => prev + 1);
       } else {
-        alert("Submission failed: " + data.error);
+        showCustomAlert("Submission Failed", data.error);
       }
     } catch (err: any) {
-      alert("Error: " + err.message);
+      showCustomAlert("Error", err.message);
     }
   };
 
   const handleWithdraw = async () => {
     if (!selectedRequest || actionLoading || !currentUser) return;
-    if (!confirm("Are you sure you want to withdraw this request? This will archive it and allow you to submit a new request in this category.")) return;
-    
-    setActionLoading(true);
-    try {
-      const res = await fetch("/api/procurement/withdraw", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requestId: selectedRequest._id
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await refreshDashboardData();
-        setSelectedRequest(data.request);
-      } else {
-        alert("Withdrawal failed: " + data.error);
+    showCustomConfirm(
+      "Withdraw Request",
+      "Are you sure you want to withdraw this request? This will archive it and allow you to submit a new request in this category.",
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await fetch("/api/procurement/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requestId: selectedRequest._id
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            await refreshDashboardData();
+            setSelectedRequest(data.request);
+            showCustomAlert("Withdrawn", "Request withdrawn successfully.");
+          } else {
+            showCustomAlert("Withdrawal Failed", data.error);
+          }
+        } catch (e: any) {
+          showCustomAlert("Error", e.message);
+        } finally {
+          setActionLoading(false);
+        }
       }
-    } catch (e: any) {
-      alert("Error: " + e.message);
-    } finally {
-      setActionLoading(false);
-    }
+    );
   };
 
   const handleApprove = async () => {
@@ -402,12 +449,12 @@ export default function Dashboard() {
         setManagerComments("");
         setSelectedRequest(data.request);
         refreshDashboardData();
-        alert("Request successfully approved. Purchase Order has been generated!");
+        showCustomAlert("Success", "Request successfully approved. Purchase Order has been generated!");
       } else {
-        alert("Approval failed: " + data.error);
+        showCustomAlert("Approval Failed", data.error);
       }
     } catch (e: any) {
-      alert("Error approving request: " + e.message);
+      showCustomAlert("Error", "Error approving request: " + e.message);
     } finally {
       setActionLoading(false);
     }
@@ -432,12 +479,12 @@ export default function Dashboard() {
         setManagerComments("");
         setSelectedRequest(data.request);
         refreshDashboardData();
-        alert("Request rejected.");
+        showCustomAlert("Success", "Request rejected.");
       } else {
-        alert("Rejection failed: " + data.error);
+        showCustomAlert("Rejection Failed", data.error);
       }
     } catch (e: any) {
-      alert("Error rejecting request: " + e.message);
+      showCustomAlert("Error", "Error rejecting request: " + e.message);
     } finally {
       setActionLoading(false);
     }
@@ -445,7 +492,7 @@ export default function Dashboard() {
 
   const handleClarify = async () => {
     if (!selectedRequest || !managerComments || actionLoading || !currentUser) {
-      alert("Please provide comments outlining the clarification required.");
+      showCustomAlert("Input Required", "Please provide comments outlining the clarification required.");
       return;
     }
     setActionLoading(true);
@@ -465,12 +512,12 @@ export default function Dashboard() {
         setManagerComments("");
         setSelectedRequest(data.request);
         refreshDashboardData();
-        alert("Clarification requested from employee.");
+        showCustomAlert("Success", "Clarification requested from employee.");
       } else {
-        alert("Failed to request clarification: " + data.error);
+        showCustomAlert("Failed", data.error);
       }
     } catch (e: any) {
-      alert("Error requesting clarification: " + e.message);
+      showCustomAlert("Error", "Error requesting clarification: " + e.message);
     } finally {
       setActionLoading(false);
     }
@@ -478,13 +525,13 @@ export default function Dashboard() {
 
   const handleLeaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Leave request submitted successfully (Mock).");
+    showCustomAlert("Leave Submitted", "Leave request submitted successfully (Mock).");
     setIsLeaveModalOpen(false);
   };
 
   const handleExpenseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Expense report submitted successfully (Mock).");
+    showCustomAlert("Expense Submitted", "Expense report submitted successfully (Mock).");
     setIsExpenseModalOpen(false);
   };
 
@@ -607,32 +654,37 @@ export default function Dashboard() {
 
   const deleteDocument = async () => {
     if (!selectedDocument) return;
-    if (!confirm("Are you sure you want to permanently delete this document?")) return;
-    setDbEditorSuccess("");
-    setDbEditorError("");
+    showCustomConfirm(
+      "Delete Document",
+      "Are you sure you want to permanently delete this document?",
+      async () => {
+        setDbEditorSuccess("");
+        setDbEditorError("");
 
-    try {
-      const res = await fetch("/api/developer/update-doc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          collectionName: selectedCollection,
-          action: "delete",
-          docId: selectedDocument._id
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDbEditorSuccess("Document deleted successfully from MongoDB.");
-        setSelectedDocument(null);
-        setDocumentJsonText("");
-        fetchDocuments(selectedCollection);
-      } else {
-        setDbEditorError("Deletion failed: " + data.error);
+        try {
+          const res = await fetch("/api/developer/update-doc", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              collectionName: selectedCollection,
+              action: "delete",
+              docId: selectedDocument._id
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setDbEditorSuccess("Document deleted successfully from MongoDB.");
+            setSelectedDocument(null);
+            setDocumentJsonText("");
+            fetchDocuments(selectedCollection);
+          } else {
+            setDbEditorError("Delete failed: " + data.error);
+          }
+        } catch (e: any) {
+          setDbEditorError("Error: " + e.message);
+        }
       }
-    } catch (e: any) {
-      setDbEditorError("Error: " + e.message);
-    }
+    );
   };
 
   const showCreateDocumentTemplate = () => {
@@ -1275,7 +1327,7 @@ export default function Dashboard() {
               <span className={styles.actionText}>New Order</span>
             </button>
             <button
-              onClick={() => alert("Multi-agent procurement automates verification details on demand.")}
+              onClick={() => showCustomAlert("About AI Agents", "Multi-agent procurement automates verification details on demand.")}
               className={styles.actionButton}
             >
               <div className={styles.actionIconWrapper} style={{ backgroundColor: "var(--surface-variant)", color: "var(--on-surface-variant)" }}>
@@ -2170,6 +2222,62 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {customDialog.isOpen && (
+        <div className={styles.modalOverlay} onClick={() => {
+          if (customDialog.type === "alert") {
+            setCustomDialog(prev => ({ ...prev, isOpen: false }));
+          }
+        }}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px" }}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "700" }}>
+                {customDialog.type === "confirm" ? (
+                  <span className="material-symbols-outlined" style={{ color: "var(--primary)" }}>help</span>
+                ) : (
+                  <span className="material-symbols-outlined" style={{ color: "var(--primary)" }}>info</span>
+                )}
+                {customDialog.title}
+              </h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ margin: 0, fontSize: "15px", lineHeight: "1.5", color: "var(--on-surface-variant)", fontFamily: "var(--font-body)" }}>
+                {customDialog.message}
+              </p>
+            </div>
+            <div className={styles.modalFooter}>
+              {customDialog.type === "confirm" ? (
+                <>
+                  <button
+                    className={styles.btnSecondary}
+                    onClick={() => {
+                      if (customDialog.onCancel) customDialog.onCancel();
+                      setCustomDialog(prev => ({ ...prev, isOpen: false }));
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={styles.btnPrimary}
+                    onClick={() => {
+                      if (customDialog.onConfirm) customDialog.onConfirm();
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </>
+              ) : (
+                <button
+                  className={styles.btnPrimary}
+                  onClick={() => setCustomDialog(prev => ({ ...prev, isOpen: false }))}
+                >
+                  OK
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
