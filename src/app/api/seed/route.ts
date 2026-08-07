@@ -11,7 +11,8 @@ import {
   AIWorkflowLog,
   AuditLog,
   PurchaseOrder,
-  Notification
+  Notification,
+  LeaveRequest
 } from "@/lib/models";
 
 export async function GET() {
@@ -27,6 +28,7 @@ export async function GET() {
     await ProcurementPolicy.deleteMany({});
     // Clean logs/requests too so we have a clean slate
     await ProcurementRequest.deleteMany({});
+    await LeaveRequest.deleteMany({});
     await AIWorkflowLog.deleteMany({});
     await AuditLog.deleteMany({});
     await PurchaseOrder.deleteMany({});
