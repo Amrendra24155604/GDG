@@ -115,6 +115,7 @@ export default function Dashboard() {
   const [procureVendor, setProcureVendor] = useState("Dell Inc");
   const [procureReason, setProcureReason] = useState("");
   const [procureSpecs, setProcureSpecs] = useState("");
+  const [procureCategory, setProcureCategory] = useState("Laptop");
 
   // Manager Approval notes (Portal view)
   const [managerComments, setManagerComments] = useState("");
@@ -323,6 +324,7 @@ export default function Dashboard() {
           employeeId: currentUser.employeeId,
           managerId: currentUser.managerId || "EMP-002",
           itemName: procureItem,
+          category: procureCategory,
           quantity: procureQty,
           justification: procureReason,
           specifications: procureSpecs,
@@ -340,6 +342,7 @@ export default function Dashboard() {
         setProcureCost("");
         setProcureReason("");
         setProcureSpecs("");
+        setProcureCategory("Laptop");
         setProcurePriority("Medium");
 
         await refreshDashboardData();
@@ -351,6 +354,33 @@ export default function Dashboard() {
       }
     } catch (err: any) {
       alert("Error: " + err.message);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!selectedRequest || actionLoading || !currentUser) return;
+    if (!confirm("Are you sure you want to withdraw this request? This will archive it and allow you to submit a new request in this category.")) return;
+    
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/procurement/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: selectedRequest._id
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await refreshDashboardData();
+        setSelectedRequest(data.request);
+      } else {
+        alert("Withdrawal failed: " + data.error);
+      }
+    } catch (e: any) {
+      alert("Error: " + e.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -1744,8 +1774,32 @@ export default function Dashboard() {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ padding: "12px", backgroundColor: "var(--surface-container-high)", borderRadius: "8px", fontSize: "13px", textAlign: "center", color: "var(--on-surface-variant)" }}>
-
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", width: "100%" }}>
+                        {["Submitted", "AI Processing", "Pending Manager"].includes(selectedRequest.currentStatus) && (
+                          <button
+                            onClick={handleWithdraw}
+                            disabled={actionLoading}
+                            style={{
+                              width: "100%",
+                              padding: "12px",
+                              backgroundColor: "transparent",
+                              color: "#ba1a1a",
+                              border: "1px solid #ba1a1a",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "8px",
+                              fontSize: "14px",
+                              transition: "all 0.2s ease"
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>undo</span>
+                            {actionLoading ? "Withdrawing..." : "Retrieve / Withdraw Request"}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2012,6 +2066,25 @@ export default function Dashboard() {
                   </div>
 
                   <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Category</label>
+                    <select
+                      className={styles.formSelect}
+                      value={procureCategory}
+                      onChange={(e) => setProcureCategory(e.target.value)}
+                    >
+                      <option value="Laptop">Laptop</option>
+                      <option value="Monitor">Monitor</option>
+                      <option value="Furniture">Furniture</option>
+                      <option value="Software">Software</option>
+                      <option value="Cloud Credits">Cloud Credits</option>
+                      <option value="Office Supplies">Office Supplies</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Preferred Vendor</label>
                     <select
                       className={styles.formSelect}
@@ -2024,9 +2097,7 @@ export default function Dashboard() {
                       <option value="Blacklisted Hardware">Blacklisted Hardware (Warning!)</option>
                     </select>
                   </div>
-                </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1.5fr", gap: "16px" }}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Estimated Unit Cost (₹)</label>
                     <input
@@ -2038,6 +2109,9 @@ export default function Dashboard() {
                       onChange={(e) => setProcureCost(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>Quantity</label>
                     <input
@@ -2049,20 +2123,20 @@ export default function Dashboard() {
                       onChange={(e) => setProcureQty(parseInt(e.target.value) || 1)}
                     />
                   </div>
-                </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Priority</label>
-                  <select
-                    className={styles.formSelect}
-                    value={procurePriority}
-                    onChange={(e) => setProcurePriority(e.target.value)}
-                  >
-                    <option value="Low">Low (Non-urgent replenishment)</option>
-                    <option value="Medium">Medium (Standard upgrade)</option>
-                    <option value="High">High (Immediate work block)</option>
-                    <option value="Critical">Critical (System downtime)</option>
-                  </select>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Priority</label>
+                    <select
+                      className={styles.formSelect}
+                      value={procurePriority}
+                      onChange={(e) => setProcurePriority(e.target.value)}
+                    >
+                      <option value="Low">Low (Non-urgent replenishment)</option>
+                      <option value="Medium">Medium (Standard upgrade)</option>
+                      <option value="High">High (Immediate work block)</option>
+                      <option value="Critical">Critical (System downtime)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className={styles.formGroup}>

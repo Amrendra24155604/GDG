@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       employeeId,
       managerId,
       itemName,
+      category,
       quantity,
       justification,
       specifications,
@@ -39,6 +40,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const reqCategory = category || "Laptop";
+
+    // Validate if the employee already has an unsatisfied request of this category
+    const activeRequest = await ProcurementRequest.findOne({
+      employeeId,
+      category: reqCategory,
+      currentStatus: { $in: ["Submitted", "AI Processing", "Pending Manager"] }
+    });
+
+    if (activeRequest) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `You already have an active request for category '${reqCategory}' (Request #${activeRequest.requestNumber}). Please resolve it or retrieve it before creating a new one.` 
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate unique request number (e.g. PR-2026-98765)
     const count = await ProcurementRequest.countDocuments();
     const uniqueSuffix = Math.floor(1000 + Math.random() * 9000);
@@ -49,7 +69,7 @@ export async function POST(req: NextRequest) {
       employeeId,
       managerId: managerId || "EMP-002", // Default to Sarah Jenkins if not specified
       itemName,
-      category: "Pending", // Will be updated by Requirement Agent
+      category: reqCategory,
       quantity: quantity || 1,
       justification,
       specifications,
