@@ -1,3 +1,22 @@
+https://gdg-blush-omega.vercel.app/dashboard
+
+
+for user:
+username:Ankush
+pass:Ankush@123
+(for creating requests)
+
+for manager:
+username:Raja babu
+pass:Ankush@123
+(for approvals or rejections)
+
+for developer:
+username:Amrendra
+pass:Ankush@123
+(to add new users, handle db)
+
+
 # AI Operational Rules & Confidence Scoring Guidelines (`agent_rules.md`)
 
 This document defines the core responsibilities, one-line summary of work, operational rules, and exact **confidence scoring math formulas** for all AI Agents across the **Procurement**, **Leave**, and **Expense Reimbursement** workflows.

@@ -1439,7 +1439,7 @@ export default function Dashboard() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Sarah Jenkins"
+                      placeholder="e.g. Raja babu"
                       value={newUserName}
                       onChange={(e) => setNewUserName(e.target.value)}
                       className={styles.formInput}
