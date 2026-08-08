@@ -582,7 +582,7 @@ export default function Dashboard() {
     if (!selectedRequest || actionLoading || !currentUser) return;
     showCustomConfirm(
       "Withdraw Request",
-      "Are you sure you want to withdraw this request? This will archive it and allow you to submit a new request in this category.",
+      "Are you sure you want to withdraw this procurement request? This will archive it and halt multi-agent processing.",
       async () => {
         setActionLoading(true);
         try {
@@ -597,7 +597,71 @@ export default function Dashboard() {
           if (data.success) {
             await refreshDashboardData();
             setSelectedRequest(data.request);
-            showCustomAlert("Withdrawn", "Request withdrawn successfully.");
+            showCustomAlert("Withdrawn", "Procurement request withdrawn successfully.");
+          } else {
+            showCustomAlert("Withdrawal Failed", data.error);
+          }
+        } catch (e: any) {
+          showCustomAlert("Error", e.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
+
+  const handleLeaveWithdraw = async () => {
+    if (!selectedLeave || actionLoading || !currentUser) return;
+    showCustomConfirm(
+      "Withdraw Leave Request",
+      "Are you sure you want to withdraw this leave request? This will cancel the application and restore your leave balance.",
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await fetch("/api/leave/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requestId: selectedLeave._id
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            await refreshDashboardData();
+            setSelectedLeave(data.request);
+            showCustomAlert("Withdrawn", "Leave request withdrawn successfully.");
+          } else {
+            showCustomAlert("Withdrawal Failed", data.error);
+          }
+        } catch (e: any) {
+          showCustomAlert("Error", e.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
+
+  const handleExpenseWithdraw = async () => {
+    if (!selectedClaim || actionLoading || !currentUser) return;
+    showCustomConfirm(
+      "Withdraw Expense Claim",
+      "Are you sure you want to withdraw this expense reimbursement claim?",
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await fetch("/api/expense/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              claimId: selectedClaim._id
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            await refreshDashboardData();
+            setSelectedClaim(data.claim);
+            showCustomAlert("Withdrawn", "Expense claim withdrawn successfully.");
           } else {
             showCustomAlert("Withdrawal Failed", data.error);
           }
@@ -2764,6 +2828,18 @@ export default function Dashboard() {
                       )}
                     </ul>
                   </div>
+                {portalViewRole === "Employee" && currentUser.employeeId === selectedLeave.employeeId && ["Submitted", "AI Processing", "Pending Manager"].includes(selectedLeave.currentStatus) && (
+                  <div style={{ borderTop: "1px solid var(--outline-variant)", paddingTop: "16px", display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={handleLeaveWithdraw}
+                      disabled={actionLoading}
+                      className={styles.btnSecondary}
+                      style={{ borderColor: "#ba1a1a", color: "#ba1a1a", display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>cancel</span>
+                      Withdraw Leave Request
+                    </button>
+                  </div>
                 )}
 
                 {portalViewRole === "Manager" && selectedLeave.currentStatus === "Pending Manager" && (
@@ -3020,6 +3096,20 @@ export default function Dashboard() {
                         ))
                       }
                     </ul>
+                  </div>
+                )}
+
+                {portalViewRole === "Employee" && currentUser.employeeId === selectedClaim.employeeId && ["Submitted", "AI Processing", "Pending Manager"].includes(selectedClaim.currentStatus) && (
+                  <div style={{ borderTop: "1px solid var(--outline-variant)", paddingTop: "16px", display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={handleExpenseWithdraw}
+                      disabled={actionLoading}
+                      className={styles.btnSecondary}
+                      style={{ borderColor: "#ba1a1a", color: "#ba1a1a", display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>cancel</span>
+                      Withdraw Expense Claim
+                    </button>
                   </div>
                 )}
 

@@ -1,9 +1,9 @@
 Architecture — AI Enterprise Operations Platform
 1. What the platform does
 Our platform helps employees handle common internal company processes such as:
-🛒Procurement requests
-💰Expense reimbursement
-🏖️Leave requests
+    Procurement requests
+    Expense reimbursement
+    Leave requests
 Instead of employees having to understand complicated company procedures, search through policies, contact different departments, and wait for manual verification, they submit a request through one platform.
 The system then collects the information it needs, checks company records and policies, uses specialized AI agents to analyze the request, and sends a concise recommendation to the appropriate manager.
 The AI does the analysis and preparation — the manager remains responsible for the final decision.
@@ -128,3 +128,89 @@ Reliability: Each agent has a limited, well-defined task (e.g., budget checking,
 Transparency: Agent logs and workflow summaries make AI decisions auditable and explainable.
 
 Extensibility: New workflows (leave, expenses, other internal processes) can reuse the same orchestrator, data layer, and logging, with domain-specific agent sets plugged in on top of a shared platform.
+
+
+Leave Approval Workflow
+
+The Leave workflow automates leave verification and prepares a recommendation for the manager while keeping the final decision human-controlled.
+
+Flow
+Employee
+   ↓
+Web App → Leave Request Created
+   ↓
+Workflow Orchestrator
+   ↓
+Employee Context
+   ↓
+Leave Balance
+   ↓
+Policy Check
+   ↓
+Team Availability
+   ↓
+Calendar / Conflict Check
+   ↓
+AI Recommendation
+   ↓
+Manager Review
+   ↓
+Approve / Reject / Clarify
+   ↓
+Database Updated
+   ↓
+Employee Notified
+Agents
+
+Employee Context Agent
+Fetches employee, department, manager, and current leave balances from MongoDB.
+
+Leave Balance Agent
+Calculates requested working days and checks them against the employee's available leave.
+
+Policy Agent
+Checks notice periods, maximum consecutive days, leave-type rules, certificates, and eligibility.
+
+Team Availability Agent
+Checks how many team members are already on leave. Flags HIGH operational risk if 50% or more of the team is unavailable.
+
+Calendar / Conflict Agent
+Checks requested dates against important releases, project deadlines, milestones, and company events.
+
+Recommendation Agent
+Combines all findings and produces:
+
+APPROVE / REJECT / NEED REVIEW
+
+with confidence and supporting evidence.
+
+Notification Agent
+Provides real-time updates such as:
+
+✓ Request submitted
+✓ Employee verified
+✓ Leave balance checked
+✓ Policy checked
+✓ Team availability checked
+✓ Calendar checked
+⏳ Waiting for manager
+Manager Review
+
+The manager receives a concise summary:
+
+Employee: EMP-002
+Leave: 18–20 Aug
+Type: Earned Leave
+
+✓ Balance sufficient
+✓ Policy compliant
+✓ Team availability acceptable
+⚠ Project release conflict
+
+AI Recommendation: NEED REVIEW
+Confidence: 91%
+
+[Approve] [Reject] [Clarify]
+Approve → Update leave status and balance → Notify employee.
+Reject → Save reason → Notify employee.
+Clarify → Employee provides more information → Workflow runs again.
