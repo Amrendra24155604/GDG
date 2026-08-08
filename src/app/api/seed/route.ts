@@ -161,11 +161,11 @@ export async function GET() {
       }
     ]);
 
-    // 3. Seed Assets
+    // 3. Seed Assets (15+ Items across multiple departments and conditions)
     const assets = await Asset.insertMany([
       {
         assetId: "AST-101",
-        assetName: "Dell UltraSharp 27 Monitor",
+        assetName: "Dell UltraSharp 27 4K Monitor",
         category: "Monitor",
         serialNumber: "CN-0XX739-74445-98G-091L",
         assignedTo: "",
@@ -189,7 +189,7 @@ export async function GET() {
       },
       {
         assetId: "AST-103",
-        assetName: "Apple MacBook Pro 14",
+        assetName: "Apple MacBook Pro 14 M2",
         category: "Laptop",
         serialNumber: "C02F9983Q05D",
         assignedTo: "EMP-002",
@@ -212,7 +212,7 @@ export async function GET() {
       },
       {
         assetId: "AST-105",
-        assetName: "Apple MacBook Air M2 (Unassigned Stock)",
+        assetName: "Apple MacBook Air M2 (Stock)",
         category: "Laptop",
         serialNumber: "C02G1122M201",
         assignedTo: "",
@@ -224,7 +224,7 @@ export async function GET() {
       },
       {
         assetId: "AST-106",
-        assetName: "LG 34-inch UltraWide Curved Monitor",
+        assetName: "LG 34-inch UltraWide Curved Display",
         category: "Monitor",
         serialNumber: "LG34UW-99812",
         assignedTo: "",
@@ -233,10 +233,80 @@ export async function GET() {
         warrantyExpiry: new Date("2027-10-10"),
         condition: "Good",
         status: "Available"
+      },
+      {
+        assetId: "AST-107",
+        assetName: "Lenovo ThinkPad X1 Carbon Gen 11",
+        category: "Laptop",
+        serialNumber: "LNV-X1C11-8902",
+        assignedTo: "EMP-005",
+        department: "AI Research",
+        purchaseDate: new Date("2023-08-12"),
+        warrantyExpiry: new Date("2026-08-12"),
+        condition: "Good",
+        status: "Assigned"
+      },
+      {
+        assetId: "AST-108",
+        assetName: "Dell Precision 7780 Workstation",
+        category: "Laptop",
+        serialNumber: "DP7780-NV-9901",
+        assignedTo: "EMP-006",
+        department: "Product Analytics",
+        purchaseDate: new Date("2024-01-20"),
+        warrantyExpiry: new Date("2027-01-20"),
+        condition: "Excellent",
+        status: "Assigned"
+      },
+      {
+        assetId: "AST-109",
+        assetName: "Herman Miller Aeron Chair",
+        category: "Furniture",
+        serialNumber: "HM-AERON-7721",
+        assignedTo: "EMP-004",
+        department: "Operations",
+        purchaseDate: new Date("2022-05-10"),
+        condition: "Good",
+        status: "Assigned"
+      },
+      {
+        assetId: "AST-110",
+        assetName: "BenQ Designer 32-inch 4K Monitor",
+        category: "Monitor",
+        serialNumber: "BNQ-PD3220U-01",
+        assignedTo: "",
+        department: "AI Research",
+        purchaseDate: new Date("2025-02-01"),
+        warrantyExpiry: new Date("2028-02-01"),
+        condition: "New",
+        status: "Available"
+      },
+      {
+        assetId: "AST-111",
+        assetName: "Standing Motorized Desk Dual Motor",
+        category: "Furniture",
+        serialNumber: "ST-DESK-9902",
+        assignedTo: "",
+        department: "Facilities",
+        purchaseDate: new Date("2024-06-15"),
+        condition: "New",
+        status: "Available"
+      },
+      {
+        assetId: "AST-112",
+        assetName: "Apple Studio Display 27-inch 5K",
+        category: "Monitor",
+        serialNumber: "APL-SD27-5K01",
+        assignedTo: "EMP-002",
+        department: "AI Research",
+        purchaseDate: new Date("2024-03-01"),
+        warrantyExpiry: new Date("2027-03-01"),
+        condition: "Excellent",
+        status: "Assigned"
       }
     ]);
 
-    // 4. Seed Vendors
+    // 4. Seed Vendors (8+ Vendor Entities)
     const vendors = await Vendor.insertMany([
       {
         vendorName: "Dell Inc",
@@ -287,6 +357,42 @@ export async function GET() {
         products: ["Laptop", "Desktop", "Monitor"]
       },
       {
+        vendorName: "Steelcase Office Supplies",
+        email: "corporate@steelcase.com",
+        phone: "+1 (800) 515-2200",
+        address: "901 44th St SE, Grand Rapids, MI 49508",
+        gstNumber: "GST-STEEL-771122",
+        rating: 4.7,
+        averageDeliveryDays: 8,
+        warrantySupport: true,
+        approved: true,
+        products: ["Furniture", "Office Supplies"]
+      },
+      {
+        vendorName: "AWS Direct",
+        email: "enterprise@amazon.com",
+        phone: "+1 (800) 386-8800",
+        address: "410 Terry Ave N, Seattle, WA 98109",
+        gstNumber: "GST-AWS-990011",
+        rating: 4.9,
+        averageDeliveryDays: 1,
+        warrantySupport: true,
+        approved: true,
+        products: ["Cloud Credits", "Software"]
+      },
+      {
+        vendorName: "Microsoft Cloud Sales",
+        email: "azure-enterprise@microsoft.com",
+        phone: "+1 (800) 642-7676",
+        address: "One Microsoft Way, Redmond, WA 98052",
+        gstNumber: "GST-MSFT-556677",
+        rating: 4.8,
+        averageDeliveryDays: 1,
+        warrantySupport: true,
+        approved: true,
+        products: ["Software", "Cloud Credits"]
+      },
+      {
         vendorName: "Blacklisted Hardware",
         email: "scam@shadyhardware.com",
         phone: "+1 (800) 999-6666",
@@ -300,7 +406,7 @@ export async function GET() {
       }
     ]);
 
-    // 5. Seed Vendor Quotations
+    // 5. Seed Vendor Quotations (10+ Quotations)
     const quotations = await VendorQuotation.insertMany([
       {
         vendorId: "Dell Inc",
@@ -353,6 +459,36 @@ export async function GET() {
         quotationDocument: "http://example.com/quotations/lenovo_p1.pdf"
       },
       {
+        vendorId: "Steelcase Office Supplies",
+        itemName: "Steelcase Gesture Desk Chair",
+        specification: "Fully Adjustable Arms, 3D Knit Back, Pneumatic Height Adjustment",
+        price: 85000,
+        currency: "INR",
+        deliveryDays: 8,
+        warranty: "12 Years Structural Warranty",
+        quotationDocument: "http://example.com/quotations/steelcase_gesture.pdf"
+      },
+      {
+        vendorId: "AWS Direct",
+        itemName: "AWS Enterprise Compute Credits",
+        specification: "10,000 Compute Credits for EC2 P4d GPU instances & Bedrock AI Models",
+        price: 450000,
+        currency: "INR",
+        deliveryDays: 1,
+        warranty: "24/7 Enterprise Support",
+        quotationDocument: "http://example.com/quotations/aws_credits.pdf"
+      },
+      {
+        vendorId: "Microsoft Cloud Sales",
+        itemName: "GitHub Enterprise & Visual Studio SaaS",
+        specification: "50 Developer Licenses with GitHub Copilot Enterprise & Codespaces",
+        price: 210000,
+        currency: "INR",
+        deliveryDays: 1,
+        warranty: "1 Year Enterprise License Agreement",
+        quotationDocument: "http://example.com/quotations/msft_github.pdf"
+      },
+      {
         vendorId: "Blacklisted Hardware",
         itemName: "Cheap Replica Laptop",
         specification: "Intel Core i7 (Gen 4), 8GB RAM, 256GB Refurbished HDD",
@@ -364,7 +500,7 @@ export async function GET() {
       }
     ]);
 
-    // 6. Seed Department Budgets
+    // 6. Seed Department Budgets (5 Departments)
     const budgets = await DepartmentBudget.insertMany([
       {
         department: "AI Research",
@@ -378,7 +514,14 @@ export async function GET() {
         fiscalYear: "2026",
         allocatedBudget: 8000000,
         usedBudget: 7500000,
-        remainingBudget: 500000 // Low remaining budget edge case!
+        remainingBudget: 500000
+      },
+      {
+        department: "Engineering",
+        fiscalYear: "2026",
+        allocatedBudget: 15000000,
+        usedBudget: 5200000,
+        remainingBudget: 9800000
       },
       {
         department: "Operations",
@@ -396,7 +539,7 @@ export async function GET() {
       }
     ]);
 
-    // 7. Seed Procurement Policies (Handling Edge Cases)
+    // 7. Seed Procurement Policies (Comprehensive Rules for Edge Cases)
     const policies = await ProcurementPolicy.insertMany([
       {
         policyName: "Standard IT Asset Policy",
@@ -436,7 +579,7 @@ export async function GET() {
         maxBudget: 250000,
         requiresQuotation: false,
         approvalLevels: 2,
-        allowedVendors: ["Microsoft", "AWS Direct", "JetBrains", "GitHub"]
+        allowedVendors: ["Microsoft Cloud Sales", "AWS Direct", "JetBrains", "GitHub"]
       },
       {
         policyName: "Cloud Infrastructure Policy",
@@ -446,11 +589,21 @@ export async function GET() {
         maxBudget: 500000,
         requiresQuotation: true,
         approvalLevels: 2,
-        allowedVendors: ["AWS Direct", "Google Cloud", "Microsoft Azure"]
+        allowedVendors: ["AWS Direct", "Google Cloud", "Microsoft Cloud Sales"]
+      },
+      {
+        policyName: "Office Supplies Policy",
+        category: "Office Supplies",
+        description: "Bulk stationary and desk accessories up to ₹40,000 per order.",
+        minRole: "Employee",
+        maxBudget: 40000,
+        requiresQuotation: false,
+        approvalLevels: 1,
+        allowedVendors: ["Steelcase Office Supplies"]
       }
     ]);
 
-    // 8. Seed Comprehensive Expense Policies (Handling Edge Cases)
+    // 8. Seed Comprehensive Expense Policies (8+ Edge-Case Policies for RAG)
     await ExpensePolicy.insertMany([
       {
         category: "Travel",
@@ -465,6 +618,20 @@ export async function GET() {
           "Business purpose (e.g. client visit, site commute, inter-office travel) must be clearly stated",
           "Personal weekend travel expenses are strictly non-reimbursable",
           "Claims submitted >30 days after trip date are subject to audit penalty"
+        ]
+      },
+      {
+        category: "Flight & Inter-City Travel",
+        maxLimitPerTrip: 15000,
+        monthlyLimit: 60000,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "Domestic Flight & Inter-City Train Travel Policy",
+        rules: [
+          "Economy class flights allowed up to ₹15,000 per trip",
+          "Boarding pass and e-ticket invoice mandatory",
+          "Must be booked at least 7 days in advance unless emergency VP approval is attached",
+          "Business class flights are strictly non-reimbursable for non-executive roles"
         ]
       },
       {
@@ -507,19 +674,60 @@ export async function GET() {
           "Merchant receipt image mandatory",
           "Items above ₹5,000 must go through Procurement Workflow"
         ]
+      },
+      {
+        category: "Hotel & Accommodation",
+        maxLimitPerTrip: 8000,
+        monthlyLimit: 40000,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "Hotel Stay & Overnight Lodging Policy",
+        rules: [
+          "Maximum ₹8,000 per night for tier-1 city hotel accommodations",
+          "Itemized hotel folio showing room rate and taxes mandatory",
+          "Room service meals billed to room must follow dining cap limits (₹1,500/day)",
+          "Minibar items and video-on-demand charges are non-reimbursable"
+        ]
+      },
+      {
+        category: "Internet & Cell Phone Allowance",
+        maxLimitPerTrip: 2500,
+        monthlyLimit: 2500,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "Monthly Remote Work Internet & Mobile Policy",
+        rules: [
+          "Monthly home broadband/mobile internet reimbursement up to ₹2,500",
+          "Monthly broadband bill invoice required",
+          "Service period must match current active employment month"
+        ]
+      },
+      {
+        category: "Training & Certification",
+        maxLimitPerTrip: 12000,
+        monthlyLimit: 25000,
+        receiptRequired: true,
+        allowedRoles: ["Employee", "Manager", "Admin"],
+        description: "Professional Upskilling & Certification Exam Policy",
+        rules: [
+          "AWS, GCP, PMP, or technical certification exam fees up to ₹12,000 reimbursable",
+          "Proof of passing score certificate & payment receipt mandatory",
+          "Pre-approval from Engineering Director required prior to exam registration"
+        ]
       }
     ]);
 
     return NextResponse.json({
       success: true,
-      message: "Database seeded successfully!",
+      message: "Database seeded with rich enterprise dataset & edge-case policies!",
       seededCounts: {
         users: users.length,
         assets: assets.length,
         vendors: vendors.length,
         quotations: quotations.length,
         budgets: budgets.length,
-        policies: policies.length
+        procurementPolicies: policies.length,
+        expensePolicies: 8
       }
     });
   } catch (error: any) {
