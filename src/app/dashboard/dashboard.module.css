@@ -298,7 +298,7 @@
 }
 
 .modal {
-  background-color: var(--surface);
+  background-color: #ffffff !important;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   width: 100%;
@@ -666,14 +666,14 @@
 }
 
 .modal {
-  background-color: var(--surface-container-lowest);
+  background-color: #ffffff !important;
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 500px;
   margin: var(--spacing-md);
   overflow: hidden;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
   animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
