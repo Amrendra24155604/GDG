@@ -2830,7 +2830,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {portalViewRole === "Employee" && currentUser.employeeId === selectedLeave.employeeId && ["Submitted", "AI Processing", "Pending Manager"].includes(selectedLeave.currentStatus) && (
+                {portalViewRole === "Employee" && currentUser?.employeeId === selectedLeave.employeeId && ["Submitted", "AI Processing", "Pending Manager"].includes(selectedLeave.currentStatus) && (
                   <div style={{ borderTop: "1px solid var(--outline-variant)", paddingTop: "16px", display: "flex", justifyContent: "flex-end" }}>
                     <button
                       onClick={handleLeaveWithdraw}
