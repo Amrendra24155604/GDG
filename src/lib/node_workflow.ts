@@ -225,20 +225,32 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
     await logAgentExecution(
       leaveRequestId,
       "Employee Context Agent",
-      "Leave Balance Retrieval",
+      "Employee Profile & Balance Retrieval",
       "Completed",
       100,
       `Employee ${empName} profile retrieved. Requested ${daysRequested} days of ${leaveReq.leaveType}. Available balance: ${availBalance} days. Sufficient balance: ${balancePassed}.`,
       { daysRequested, availBalance, balancePassed }
     );
 
-    // Step 2: Policy Agent
+    // Step 2: Leave Balance Check Agent
+    await delay(600);
+    await logAgentExecution(
+      leaveRequestId,
+      "Leave Balance Check Agent",
+      "Balance Verification",
+      "Completed",
+      100,
+      `Verified requested duration (${daysRequested} days) against available ${leaveReq.leaveType} balance (${availBalance} days). Balance sufficient: ${balancePassed}.`,
+      { sufficient: balancePassed, availBalance }
+    );
+
+    // Step 3: Policy Agent / Leave Policy Agent
     await delay(600);
     const maxConsecutive = 10;
     const policyPassed = daysRequested <= maxConsecutive;
     await logAgentExecution(
       leaveRequestId,
-      "Policy Agent",
+      "Leave Policy Agent",
       "Leave Policy Validation",
       "Completed",
       95,
@@ -246,7 +258,7 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
       { maxConsecutive, policyPassed }
     );
 
-    // Step 3: Team Availability Agent
+    // Step 4: Team Availability Agent
     await delay(600);
     await logAgentExecution(
       leaveRequestId,
@@ -258,11 +270,11 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
       { coveragePassed: true }
     );
 
-    // Step 4: Conflict Agent
+    // Step 5: Calendar / Conflict Agent
     await delay(600);
     await logAgentExecution(
       leaveRequestId,
-      "Conflict Agent",
+      "Calendar / Conflict Agent",
       "Milestone Conflict Scan",
       "Completed",
       92,
