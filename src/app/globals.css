@@ -1,58 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Color Palette matching dashboard.html */
-  --on-surface: #1a1c1c;
-  --surface-container-highest: #e2e2e2;
-  --on-secondary-container: #646464;
-  --on-error-container: #93000a;
-  --surface-container-low: #f3f3f4;
-  --primary: #000000;
-  --on-surface-variant: #4c4546;
-  --error-container: #ffdad6;
-  --secondary-fixed-dim: #c7c6c6;
-  --primary-fixed-dim: #c6c6c6;
-  --on-secondary-fixed: #1b1c1c;
-  --outline: #7e7576;
-  --on-secondary-fixed-variant: #464747;
-  --outline-variant: #cfc4c5;
-  --background: #f9f9f9;
-  --primary-container: #1b1b1b;
-  --inverse-primary: #c6c6c6;
-  --tertiary-fixed: #e2e2e2;
-  --on-tertiary-fixed: #1a1c1c;
-  --surface-container: #eeeeee;
-  --secondary-container: #e3e2e2;
-  --primary-fixed: #e2e2e2;
-  --surface-container-high: #e8e8e8;
-  --tertiary-container: #1a1c1c;
-  --error: #ba1a1a;
-  --on-tertiary: #ffffff;
-  --surface-variant: #e2e2e2;
-  --on-primary-fixed-variant: #474747;
-  --surface: #f9f9f9;
-  --surface-container-lowest: #ffffff;
-  --on-tertiary-container: #838484;
-  --on-error: #ffffff;
-  --on-tertiary-fixed-variant: #454747;
-  --on-secondary: #ffffff;
-  --on-primary-fixed: #1b1b1b;
-  --on-background: #1a1c1c;
-  --tertiary: #000000;
+  /* Rich Vibrant Enterprise Palette */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
   --on-primary: #ffffff;
-  --secondary: #5e5e5e;
-  --inverse-on-surface: #f0f1f1;
-  --secondary-fixed: #e3e2e2;
-  --on-primary-container: #848484;
-  --tertiary-fixed-dim: #c6c6c6;
-  --surface-dim: #dadada;
-  --inverse-surface: #2f3131;
-  --surface-tint: #5e5e5e;
-  --surface-bright: #f9f9f9;
+  
+  --secondary: #0ea5e9;
+  --secondary-hover: #0284c7;
+  --secondary-light: #f0f9ff;
+  
+  --tertiary: #8b5cf6;
+  --tertiary-light: #f5f3ff;
+
+  --accent-emerald: #10b981;
+  --accent-emerald-light: #ecfdf5;
+
+  --background: #f8fafc;
+  --on-background: #0f172a;
+  
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.85);
+  --surface-container: #f1f5f9;
+  --surface-container-low: #f8fafc;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #cbd5e1;
+  
+  --on-surface: #1e293b;
+  --on-surface-variant: #64748b;
+  
+  --outline: #94a3b8;
+  --outline-variant: #e2e8f0;
+  
+  --error: #ef4444;
+  --error-light: #fef2f2;
+
+  /* Modern Glassmorphic Gradients */
+  --grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --grad-surface: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --grad-accent: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  --grad-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --grad-amber: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+
+  /* Modern Soft Elevation & Depth */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
 
   /* Fonts */
-  --font-display: 'Hanken Grotesk', sans-serif;
-  --font-body: 'Hanken Grotesk', sans-serif;
+  --font-display: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-body: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* Spacing */
@@ -60,16 +59,14 @@
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
-  --spacing-xl: 48px;
-  --spacing-gutter: 24px;
-  --spacing-margin: 32px;
+  --spacing-xl: 40px;
   --spacing-max-width: 1280px;
 
   /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 }
 
@@ -203,4 +200,34 @@ button {
   .font-headline-lg {
     font-size: 24px;
   }
+}
+
+/* Glassmorphism & Micro-animations */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(79, 70, 229, 0.4);
+  }
+}
+
+.animate-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float {
+  animation: floatSlow 4s infinite ease-in-out;
 }

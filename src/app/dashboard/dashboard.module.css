@@ -23,39 +23,46 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 64px;
-  padding: 0 var(--spacing-md);
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--outline-variant);
-  transition: colors 0.2s ease;
+  height: 68px;
+  padding: 0 var(--spacing-lg);
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: 8px;
+  padding: 6px 12px;
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease;
 }
 
 .brand:hover {
-  background-color: var(--surface-container-low);
+  background-color: var(--surface-container);
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   object-fit: cover;
-  border: 1px solid var(--outline-variant);
+  border: 2px solid var(--primary-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .title {
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
+  font-weight: 800;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
 .bellButton {
@@ -63,22 +70,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 10px;
   border-radius: var(--radius-full);
-  transition: background-color 0.2s ease;
+  background-color: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  transition: all 0.2s ease;
 }
 
 .bellButton:hover {
-  background-color: var(--surface-container-low);
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .badge {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background-color: var(--error);
+  border: 2px solid var(--surface);
   border-radius: var(--radius-full);
 }
 
@@ -103,13 +115,14 @@
 .welcomeTitle {
   font-family: var(--font-display);
   font-size: 32px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--on-surface);
+  letter-spacing: -0.02em;
 }
 
 .welcomeSub {
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--on-surface-variant);
 }
 
@@ -123,19 +136,19 @@
 .sectionHeader {
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--on-surface);
 }
 
 .actionsGrid {
   display: grid;
-  grid-template-cols: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
 }
 
 @media (min-width: 768px) {
   .actionsGrid {
-    grid-template-cols: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -145,22 +158,25 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
-  background-color: var(--surface);
+  background: var(--surface);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
   gap: var(--spacing-sm);
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
 }
 
 .actionButton:hover {
-  background-color: var(--surface-container-low);
-  border-color: var(--outline);
+  background: var(--surface);
+  border-color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
 }
 
 .actionIconWrapper {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -169,43 +185,45 @@
 }
 
 .actionButton:hover .actionIconWrapper {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
 .actionText {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--on-surface);
 }
 
 /* Bento Cards */
 .bentoSection {
   display: grid;
-  grid-template-cols: 1fr;
+  grid-template-columns: 1fr;
   gap: var(--spacing-lg);
 }
 
 @media (min-width: 768px) {
   .bentoSection {
-    grid-template-cols: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 .bentoCard {
-  background-color: var(--surface);
+  background: var(--surface);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
 }
 
 .bentoCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-md);
   border-color: var(--outline);
+  transform: translateY(-2px);
 }
 
 .bentoHeader {
@@ -222,8 +240,8 @@
 
 .bentoTitle {
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--on-surface);
 }
 
@@ -247,6 +265,181 @@
 .bentoBodyCenter {
   text-align: center;
   padding: var(--spacing-sm) 0;
+}
+
+.bentoBigText {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.03em;
+}
+
+.bentoBigSub {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin-top: var(--spacing-xs);
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalHeader {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--outline-variant);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.modalClose {
+  padding: 8px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface-container);
+  transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+  background-color: var(--surface-container-high);
+  transform: rotate(90deg);
+}
+
+.modalBody {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.formLabel {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+.formInput,
+.formSelect {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--outline-variant);
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+.modalFooter {
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  border-top: 1px solid var(--outline-variant);
+}
+
+.btnPrimary {
+  padding: 12px 24px;
+  background: var(--grad-primary);
+  color: var(--on-primary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+  opacity: 0.95;
+}
+
+.btnSecondary {
+  padding: 12px 24px;
+  background-color: var(--surface);
+  color: var(--on-surface);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  border: 1.5px solid var(--outline-variant);
+  transition: all 0.2s ease;
+}
+
+.btnSecondary:hover {
+  background-color: var(--surface-container);
+  border-color: var(--outline);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .bentoValue {
