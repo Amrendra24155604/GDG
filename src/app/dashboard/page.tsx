@@ -2350,24 +2350,6 @@ export default function Dashboard() {
                               <div style={{ color: "var(--on-surface-variant)", lineHeight: "1.4" }}>
                                 <strong>Reasoning:</strong> {log.reasoning}
                               </div>
-                              {log.evidence && (
-                                <div style={{ marginTop: "4px" }}>
-                                  <details>
-                                    <summary style={{ cursor: "pointer", fontWeight: "bold", outline: "none" }}>Show Queried Sources / Raw Data</summary>
-                                    <pre style={{
-                                      marginTop: "8px",
-                                      padding: "8px",
-                                      backgroundColor: "var(--surface-container-high)",
-                                      borderRadius: "4px",
-                                      overflowX: "auto",
-                                      fontSize: "11px",
-                                      fontFamily: "var(--font-mono)"
-                                    }}>
-                                      {JSON.stringify(JSON.parse(log.evidence), null, 2)}
-                                    </pre>
-                                  </details>
-                                </div>
-                              )}
                               <div style={{ display: "flex", justifyContent: "flex-end", color: "var(--on-surface-variant)", fontSize: "11px" }}>
                                 <span>Execution time: {log.executionTime}ms</span>
                               </div>
