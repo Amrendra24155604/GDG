@@ -211,7 +211,7 @@ export default function Login() {
           }}
         >
           <span style={{ fontSize: "12px", fontWeight: "700", color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            🔑 Demo Login Accounts (1-Click Fill)
+            Demo Login Accounts (1-Click Fill)
           </span>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -235,7 +235,7 @@ export default function Login() {
               }}
             >
               <div>
-                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>👤 User (Employee)</strong>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}> User (Employee)</strong>
                 <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Ankush</strong> | Pass: <strong>Ankush@123</strong></span>
               </div>
               <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>
@@ -263,7 +263,7 @@ export default function Login() {
               }}
             >
               <div>
-                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>👔 Manager</strong>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}> Manager</strong>
                 <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Raja babu</strong> | Pass: <strong>Ankush@123</strong></span>
               </div>
               <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>
@@ -291,7 +291,7 @@ export default function Login() {
               }}
             >
               <div>
-                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>💻 Developer (Admin)</strong>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}> Developer (Admin)</strong>
                 <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Amrendra</strong> | Pass: <strong>Ankush@123</strong></span>
               </div>
               <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>

@@ -15,18 +15,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Special Check: Default Developer Account
+    // Permanent Default Accounts (Fail-safe credentials that never get deleted)
+    if (username === "Ankush" && password === "Ankush@123") {
+      return NextResponse.json({
+        success: true,
+        user: {
+          employeeId: "EMP-001",
+          name: "Ankush",
+          email: "ankush@company.com",
+          username: "Ankush",
+          role: "Employee",
+          designation: "Software Engineer",
+          department: "AI Research",
+          managerId: "EMP-002",
+          leaveBalance: { casualLeave: 8, sickLeave: 10, earnedLeave: 14 }
+        }
+      });
+    }
+
+    if (username === "Raja babu" && password === "Ankush@123") {
+      return NextResponse.json({
+        success: true,
+        user: {
+          employeeId: "EMP-002",
+          name: "Raja babu",
+          email: "rajababu@company.com",
+          username: "Raja babu",
+          role: "Manager",
+          designation: "Director of Engineering",
+          department: "AI Research",
+          managerId: "EMP-004",
+          leaveBalance: { casualLeave: 15, sickLeave: 12, earnedLeave: 25 }
+        }
+      });
+    }
+
     if (username === "Amrendra" && password === "Ankush@123") {
       return NextResponse.json({
         success: true,
         user: {
-          employeeId: "DEV-001",
+          employeeId: "EMP-DEV",
           name: "Amrendra",
-          email: "amrendraky06@gmail.com",
+          email: "amrendra@company.com",
           username: "Amrendra",
           role: "Developer",
           designation: "System Developer",
-          department: "Engineering"
+          department: "Engineering",
+          managerId: "EMP-002"
         }
       });
     }
