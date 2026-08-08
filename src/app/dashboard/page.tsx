@@ -2035,6 +2035,9 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "bold" }}>{r.itemName}</div>
+                        <div style={{ fontSize: "12px", color: "var(--on-surface-variant)" }}>
+                          Requested by: <strong>{r.employeeId === "EMP-001" ? "Ankush" : r.employeeId === "EMP-002" ? "Raja babu" : r.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> ({r.employeeId})
+                        </div>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
                           <span>Qty: {r.quantity} | Cost: ₹{r.estimatedCost.toLocaleString()}</span>
                           <span>Priority: {r.priority}</span>
@@ -2102,6 +2105,9 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div style={{ fontSize: "16px", fontWeight: "bold" }}>{l.leaveType}</div>
+                        <div style={{ fontSize: "12px", color: "var(--on-surface-variant)" }}>
+                          Requested by: <strong>{l.employeeId === "EMP-001" ? "Ankush" : l.employeeId === "EMP-002" ? "Raja babu" : l.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> ({l.employeeId})
+                        </div>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
                           <span>
                             {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()}
@@ -2170,6 +2176,10 @@ export default function Dashboard() {
                             {c.currentStatus}
                           </span>
                         </div>
+                        <div style={{ fontSize: "16px", fontWeight: "bold" }}>💰 {c.expenseType} Claim</div>
+                        <div style={{ fontSize: "12px", color: "var(--on-surface-variant)" }}>
+                          Submitted by: <strong>{c.employeeId === "EMP-001" ? "Ankush" : c.employeeId === "EMP-002" ? "Raja babu" : c.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> ({c.employeeId})
+                        </div>
                         <div style={{ fontSize: "16px", fontWeight: "bold" }}>{c.expenseType} — ₹{c.amount?.toLocaleString()}</div>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "var(--on-surface-variant)" }}>
                           <span>{new Date(c.date).toLocaleDateString()}</span>
@@ -2204,7 +2214,7 @@ export default function Dashboard() {
                     <div>
                       <h3 style={{ fontSize: "22px", fontWeight: "700" }}>{selectedRequest.itemName}</h3>
                       <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", marginTop: "4px" }}>
-                        Requested by: Employee {selectedRequest.employeeId} on {new Date(selectedRequest.createdAt).toLocaleDateString()}
+                        Requested by: <strong>{selectedRequest.employeeId === "EMP-001" ? "Ankush" : selectedRequest.employeeId === "EMP-002" ? "Raja babu" : selectedRequest.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> (ID: {selectedRequest.employeeId}) on {new Date(selectedRequest.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -2602,7 +2612,7 @@ export default function Dashboard() {
                     <div>
                       <h3 style={{ fontSize: "22px", fontWeight: "700" }}>{selectedLeave.leaveType}</h3>
                       <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", marginTop: "4px" }}>
-                        Requested by: Employee {selectedLeave.employeeId} on {new Date(selectedLeave.createdAt).toLocaleDateString()}
+                        Requested by: <strong>{selectedLeave.employeeId === "EMP-001" ? "Ankush" : selectedLeave.employeeId === "EMP-002" ? "Raja babu" : selectedLeave.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> (ID: {selectedLeave.employeeId}) on {new Date(selectedLeave.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -2965,7 +2975,7 @@ export default function Dashboard() {
                     <div>
                       <h3 style={{ fontSize: "22px", fontWeight: "700" }}>💰 {selectedClaim.expenseType} Claim</h3>
                       <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", marginTop: "4px" }}>
-                        Submitted by Employee {selectedClaim.employeeId} on {new Date(selectedClaim.date).toLocaleDateString()}
+                        Submitted by: <strong>{selectedClaim.employeeId === "EMP-001" ? "Ankush" : selectedClaim.employeeId === "EMP-002" ? "Raja babu" : selectedClaim.employeeId === "EMP-DEV" ? "Amrendra" : "Employee"}</strong> (ID: {selectedClaim.employeeId}) on {new Date(selectedClaim.date).toLocaleDateString()}
                       </p>
                     </div>
                     <div style={{ textAlign: "right" }}>
