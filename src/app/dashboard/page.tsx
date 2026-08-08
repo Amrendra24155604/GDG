@@ -879,12 +879,14 @@ export default function Dashboard() {
     if (!selectedLeave || !leaveClarifyResponse || actionLoading || !currentUser) return;
     setActionLoading(true);
     try {
-      const res = await fetch("/api/leave/respond", {
+      const res = await fetch("/api/leave/reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           requestId: selectedLeave._id,
-          responseText: leaveClarifyResponse
+          managerId: currentUser.employeeId,
+          decision: "Clarification Response",
+          comments: leaveClarifyResponse
         })
       });
       const data = await res.json();
@@ -896,6 +898,35 @@ export default function Dashboard() {
         showCustomAlert("Clarified", "Response submitted. Re-initiating AI validation loop.");
       } else {
         showCustomAlert("Failed", data.error);
+      }
+    } catch (e: any) {
+      showCustomAlert("Error", e.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExpenseAction = async (action: "Approve" | "Reject" | "Clarify", comments?: string) => {
+    if (!selectedClaim || actionLoading || !currentUser) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/expense/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          claimId: selectedClaim._id,
+          managerId: currentUser.employeeId,
+          action,
+          comments: comments || (action === "Approve" ? "Approved for finance payment processing based on AI Audit." : "Expense claim reviewed.")
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedClaim(data.claim);
+        refreshDashboardData();
+        showCustomAlert(action, `Expense claim status updated: ${data.claim.currentStatus}`);
+      } else {
+        showCustomAlert("Action Failed", data.error);
       }
     } catch (e: any) {
       showCustomAlert("Error", e.message);
@@ -2957,6 +2988,61 @@ export default function Dashboard() {
                         ))
                       }
                     </ul>
+                  </div>
+                )}
+
+                {portalViewRole === "Manager" && selectedClaim.currentStatus === "Pending Manager" && (
+                  <div style={{ borderTop: "1px solid var(--outline-variant)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => handleExpenseAction("Clarify")}
+                        disabled={actionLoading}
+                        className={styles.btnSecondary}
+                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>help</span>
+                        Request Clarification
+                      </button>
+                      <button
+                        onClick={() => handleExpenseAction("Reject")}
+                        disabled={actionLoading}
+                        className={styles.btnSecondary}
+                        style={{ borderColor: "#ba1a1a", color: "#ba1a1a" }}
+                      >
+                        Reject Claim
+                      </button>
+                      <button
+                        onClick={() => handleExpenseAction("Approve")}
+                        disabled={actionLoading}
+                        className={styles.btnPrimary}
+                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>check</span>
+                        Approve Reimbursement
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {(selectedClaim.currentStatus === "Payment Processing" || selectedClaim.currentStatus === "Payment Completed") && (
+                  <div
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "#e8f5e9",
+                      border: "1px solid #c8e6c9",
+                      borderRadius: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#2e7d32" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>payments</span>
+                      <h4 style={{ fontSize: "18px", fontWeight: "700" }}>🎉 Expense Reimbursement Approved</h4>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "14px", color: "var(--on-surface-variant)" }}>
+                      Amount: <strong>₹{selectedClaim.amount?.toLocaleString()}</strong> | Status: <strong>{selectedClaim.currentStatus === "Payment Processing" ? "Payment Processing in Finance Queue" : "💰 Payment Completed - Account Credited"}</strong>
+                    </p>
                   </div>
                 )}
               </div>
