@@ -8,6 +8,9 @@ export async function GET() {
     await connectDB();
     const collections = [
       { name: "User", label: "Users" },
+      { name: "LeaveRequest", label: "Leave Requests" },
+      { name: "ExpenseClaim", label: "Expense Reimbursement Claims" },
+      { name: "ExpensePolicy", label: "Expense Policies" },
       { name: "ProcurementRequest", label: "Procurement Requests" },
       { name: "Asset", label: "Assets" },
       { name: "Vendor", label: "Vendors" },
