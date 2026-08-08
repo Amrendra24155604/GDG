@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { ExpenseClaim, AuditLog, ManagerApproval } from "@/lib/models";
+import { ExpenseClaim, AuditLog, Notification, ManagerApproval, User } from "@/lib/models";
+import { generateFormalAIEmail } from "@/lib/email_service";
 
 // POST: Manager action for Expense Claim (Approve, Reject, Clarify, Payment Processed)
 export async function POST(req: NextRequest) {
@@ -63,10 +64,40 @@ export async function POST(req: NextRequest) {
       details: `Action: ${action}. Status changed to ${newStatus}. ${comments ? `Comments: ${comments}` : ""}`
     });
 
+    // Generate Formal AI Email Notification for Employee
+    const empUser = await User.findOne({ employeeId: claim.employeeId });
+    const empName = empUser ? empUser.name : claim.employeeId;
+    const empEmail = empUser ? empUser.email : "employee@company.com";
+
+    const emailActionMap: Record<string, "Approved" | "Rejected" | "Clarification Requested" | "Payment Completed"> = {
+      Approve: "Approved",
+      Reject: "Rejected",
+      Clarify: "Clarification Requested",
+      CompletePayment: "Payment Completed"
+    };
+
+    const aiEmail = await generateFormalAIEmail({
+      employeeName: empName,
+      employeeEmail: empEmail,
+      workflowType: "Expense Reimbursement",
+      action: emailActionMap[action] || "Approved",
+      requestIdOrNumber: claim.claimNumber || claim._id.toString(),
+      details: `${claim.expenseType} Reimbursement Claim (Amount: ₹${claim.amount?.toLocaleString()})`,
+      managerComments: comments || rejectionReason || "Action taken by manager."
+    });
+
+    await Notification.create({
+      userId: claim.employeeId,
+      title: `✉️ ${aiEmail.subject}`,
+      description: aiEmail.body,
+      type: action === "Approve" || action === "CompletePayment" ? "Success" : action === "Clarify" ? "Alert" : "Info"
+    });
+
     return NextResponse.json({
       success: true,
-      message: `Expense claim status updated to ${newStatus}.`,
-      claim: updatedClaim
+      message: `Expense claim status updated to ${newStatus}. Formal AI email generated.`,
+      claim: updatedClaim,
+      email: aiEmail
     });
 
   } catch (error: any) {

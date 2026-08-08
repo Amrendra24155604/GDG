@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { LeaveRequest, AuditLog, Notification, ManagerApproval } from "@/lib/models";
+import { LeaveRequest, AuditLog, Notification, ManagerApproval, User } from "@/lib/models";
+import { generateFormalAIEmail } from "@/lib/email_service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,17 +42,29 @@ export async function POST(req: NextRequest) {
       details: `${decision}: ${comments}`
     });
 
-    // Notify employee
+    // Generate Formal AI Email Notification for Employee
+    const empUser = await User.findOne({ employeeId: request.employeeId });
+    const empName = empUser ? empUser.name : request.employeeId;
+    const empEmail = empUser ? empUser.email : "employee@company.com";
+
+    const aiEmail = await generateFormalAIEmail({
+      employeeName: empName,
+      employeeEmail: empEmail,
+      workflowType: "Leave",
+      action: decision === "Clarification Requested" ? "Clarification Requested" : "Rejected",
+      requestIdOrNumber: request.leaveNumber || request._id.toString(),
+      details: `${request.leaveType} (${new Date(request.startDate).toLocaleDateString()} - ${new Date(request.endDate).toLocaleDateString()})`,
+      managerComments: comments || "Action taken by manager."
+    });
+
     await Notification.create({
       userId: request.employeeId,
-      title: decision === "Clarification Requested" ? "❓ Leave Clarification Needed" : "❌ Leave Request Rejected",
-      description: decision === "Clarification Requested" 
-        ? `Manager requested clarification: "${comments}"`
-        : `Your leave request (${request.leaveType}) has been rejected: "${comments}"`,
+      title: `✉️ ${aiEmail.subject}`,
+      description: aiEmail.body,
       type: decision === "Clarification Requested" ? "Alert" : "Info"
     });
 
-    return NextResponse.json({ success: true, request });
+    return NextResponse.json({ success: true, request, email: aiEmail });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

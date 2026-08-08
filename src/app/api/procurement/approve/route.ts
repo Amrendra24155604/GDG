@@ -7,8 +7,10 @@ import {
   AuditLog,
   Notification,
   AIWorkflowLog,
-  DepartmentBudget
+  DepartmentBudget,
+  User
 } from "@/lib/models";
+import { generateFormalAIEmail } from "@/lib/email_service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -110,19 +112,35 @@ export async function POST(req: NextRequest) {
       details: `Generated Purchase Order ${poNumber} for vendor "${recommendedVendorName}" totaling ₹${request.estimatedCost}.`
     });
 
-    // 8. Create system notification for employee
+    // 8. Generate Formal AI Email Notification for Employee
+    const empUser = await User.findOne({ employeeId: request.employeeId });
+    const empName = empUser ? empUser.name : request.employeeId;
+    const empEmail = empUser ? empUser.email : "employee@company.com";
+
+    const aiEmail = await generateFormalAIEmail({
+      employeeName: empName,
+      employeeEmail: empEmail,
+      workflowType: "Procurement",
+      action: "Approved",
+      requestIdOrNumber: request.requestNumber || request._id.toString(),
+      details: `${request.quantity}x ${request.itemName} (Estimated Cost: ₹${request.estimatedCost?.toLocaleString()})`,
+      managerComments: comments || "Approved based on AI evaluation recommendation."
+    });
+
+    // Create system notification for employee with formal AI email body
     await Notification.create({
       userId: request.employeeId,
-      title: "Order Placed",
-      description: `Your request ${request.requestNumber} has been approved, and Purchase Order ${poNumber} has been sent to ${recommendedVendorName}.`,
+      title: `✉️ ${aiEmail.subject}`,
+      description: `${aiEmail.body}\n\n[System Info]: Purchase Order ${poNumber} dispatched to ${recommendedVendorName}.`,
       type: "Success"
     });
 
     return NextResponse.json({
       success: true,
-      message: "Request approved. Department budget updated and Purchase Order generated.",
+      message: "Request approved. Formal AI email generated and notification sent.",
       request,
-      purchaseOrder: po
+      purchaseOrder: po,
+      email: aiEmail
     });
 
   } catch (error: any) {

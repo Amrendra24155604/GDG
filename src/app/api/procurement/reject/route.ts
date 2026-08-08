@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { ProcurementRequest, ManagerApproval, AuditLog, Notification } from "@/lib/models";
+import { ProcurementRequest, ManagerApproval, AuditLog, Notification, User } from "@/lib/models";
+import { generateFormalAIEmail } from "@/lib/email_service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,18 +63,33 @@ export async function POST(req: NextRequest) {
       details: `Manager ${managerId} updated request status. Comments: ${comments || "None"}`
     });
 
-    // 4. Create Notification
+    // 4. Generate Formal AI Email Notification for Employee
+    const empUser = await User.findOne({ employeeId: request.employeeId });
+    const empName = empUser ? empUser.name : request.employeeId;
+    const empEmail = empUser ? empUser.email : "employee@company.com";
+
+    const aiEmail = await generateFormalAIEmail({
+      employeeName: empName,
+      employeeEmail: empEmail,
+      workflowType: "Procurement",
+      action: decision === "Clarification Requested" ? "Clarification Requested" : "Rejected",
+      requestIdOrNumber: request.requestNumber || request._id.toString(),
+      details: `${request.quantity}x ${request.itemName} (Estimated Cost: ₹${request.estimatedCost?.toLocaleString()})`,
+      managerComments: comments || "Action taken by manager."
+    });
+
     await Notification.create({
       userId: request.employeeId,
-      title: notificationTitle,
-      description: `Request ${request.requestNumber} for ${request.itemName} has been updated: "${comments || "No comments provided."}"`,
+      title: `✉️ ${aiEmail.subject}`,
+      description: aiEmail.body,
       type: notificationType
     });
 
     return NextResponse.json({
       success: true,
-      message: `Request status updated to ${nextStatus} (${decision}).`,
-      request
+      message: `Request status updated to ${nextStatus} (${decision}). Formal AI email generated.`,
+      request,
+      email: aiEmail
     });
 
   } catch (error: any) {

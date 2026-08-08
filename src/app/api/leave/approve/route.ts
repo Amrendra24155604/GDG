@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { LeaveRequest, User, AuditLog, Notification, ManagerApproval } from "@/lib/models";
+import { generateFormalAIEmail } from "@/lib/email_service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,15 +64,29 @@ export async function POST(req: NextRequest) {
       details: `Approved ${request.leaveType} for ${request.employeeId}. Balance reduced to ${newBalance} days.`
     });
 
-    // Notify employee
+    // Generate Formal AI Email Notification for Employee
+    const empName = employee ? employee.name : request.employeeId;
+    const empEmail = employee ? employee.email : "employee@company.com";
+
+    const aiEmail = await generateFormalAIEmail({
+      employeeName: empName,
+      employeeEmail: empEmail,
+      workflowType: "Leave",
+      action: "Approved",
+      requestIdOrNumber: request.leaveNumber || request._id.toString(),
+      details: `${request.leaveType} (${duration} Days: ${new Date(request.startDate).toLocaleDateString()} - ${new Date(request.endDate).toLocaleDateString()})`,
+      managerComments: comments || "Approved."
+    });
+
+    // Create Notification with formal AI email
     await Notification.create({
       userId: request.employeeId,
-      title: "🎉 Leave Approved",
-      description: `Your time off request (${request.leaveType}) from ${request.startDate.toISOString().split("T")[0]} to ${request.endDate.toISOString().split("T")[0]} has been approved by your manager.`,
+      title: `✉️ ${aiEmail.subject}`,
+      description: aiEmail.body,
       type: "Success"
     });
 
-    return NextResponse.json({ success: true, request });
+    return NextResponse.json({ success: true, request, email: aiEmail });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
