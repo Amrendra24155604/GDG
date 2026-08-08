@@ -99,7 +99,21 @@ export default function Dashboard() {
   const [selectedRequest, setSelectedRequest] = useState<ProcurementReq | null>(null);
   const [workflowLogs, setWorkflowLogs] = useState<WorkflowLog[]>([]);
   const [expandedLogIndex, setExpandedLogIndex] = useState<number | null>(null);
-  const [notificationsCount, setNotificationsCount] = useState(0);
+  const [userNotifications, setUserNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const fetchNotifications = async () => {
+    if (!currentUser?.employeeId) return;
+    try {
+      const res = await fetch(`/api/notifications?userId=${currentUser.employeeId}`);
+      const data = await res.json();
+      if (data.success) {
+        setUserNotifications(data.notifications || []);
+      }
+    } catch (e) {
+      console.error("Error fetching notifications:", e);
+    }
+  };
   const [recentUpdates, setRecentUpdates] = useState<UpdateItem[]>([]);
 
   // Dynamic Leave Requests
@@ -233,7 +247,14 @@ export default function Dashboard() {
     const user = JSON.parse(userJson);
     setCurrentUser(user);
 
-    // User role loaded automatically from session
+    if (user?.employeeId) {
+      fetch(`/api/notifications?userId=${user.employeeId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) setUserNotifications(data.notifications || []);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   // Prevent background scrolling and stretching/rubber-banding when modals or popups are open
@@ -1736,6 +1757,18 @@ export default function Dashboard() {
 
         {/* Header Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button
+            onClick={() => {
+              setIsNotificationsOpen(true);
+              fetchNotifications();
+            }}
+            className={styles.bellButton}
+            title="View AI Email Notifications Inbox"
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>mail</span>
+            {userNotifications.length > 0 && <span className={styles.badge} />}
+          </button>
           {currentUser.role === "Developer" && (
             <button
               onClick={async () => {
@@ -3672,6 +3705,72 @@ export default function Dashboard() {
                   OK
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isNotificationsOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsNotificationsOpen(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "700" }}>
+                <span className="material-symbols-outlined" style={{ color: "var(--primary)" }}>mail</span>
+                AI Formal Email & Notification Inbox
+              </h3>
+              <button className={styles.modalClose} onClick={() => setIsNotificationsOpen(false)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className={styles.modalBody} style={{ maxHeight: "65vh", overflowY: "auto" }}>
+              {userNotifications.length === 0 ? (
+                <div style={{ padding: "32px", textAlign: "center", color: "var(--on-surface-variant)" }}>
+                  No AI email notifications in your inbox yet.
+                </div>
+              ) : (
+                userNotifications.map((notif, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "var(--surface-container-low)",
+                      border: "1px solid var(--outline-variant)",
+                      borderRadius: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <strong style={{ fontSize: "15px", color: "var(--on-surface)" }}>{notif.title}</strong>
+                      <span style={{ fontSize: "11px", color: "var(--on-surface-variant)", fontFamily: "var(--font-mono)" }}>
+                        {new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <pre
+                      style={{
+                        margin: 0,
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "var(--font-body)",
+                        fontSize: "13px",
+                        lineHeight: "1.5",
+                        color: "var(--on-surface-variant)",
+                        backgroundColor: "#ffffff",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--outline-variant)"
+                      }}
+                    >
+                      {notif.description}
+                    </pre>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.btnSecondary} onClick={() => setIsNotificationsOpen(false)}>
+                Close Inbox
+              </button>
             </div>
           </div>
         </div>
