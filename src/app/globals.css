@@ -1,53 +1,53 @@
 @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Rich Vibrant Enterprise Palette */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #eef2ff;
+  /* Strict Monochrome / Black & White Theme */
+  --primary: #000000;
+  --primary-hover: #262626;
+  --primary-light: #f5f5f5;
   --on-primary: #ffffff;
   
-  --secondary: #0ea5e9;
-  --secondary-hover: #0284c7;
-  --secondary-light: #f0f9ff;
+  --secondary: #404040;
+  --secondary-hover: #171717;
+  --secondary-light: #f5f5f5;
   
-  --tertiary: #8b5cf6;
-  --tertiary-light: #f5f3ff;
+  --tertiary: #525252;
+  --tertiary-light: #f5f5f5;
 
-  --accent-emerald: #10b981;
-  --accent-emerald-light: #ecfdf5;
+  --accent-emerald: #171717;
+  --accent-emerald-light: #f5f5f5;
 
-  --background: #f8fafc;
-  --on-background: #0f172a;
+  --background: #fafafa;
+  --on-background: #0a0a0a;
   
   --surface: #ffffff;
-  --surface-glass: rgba(255, 255, 255, 0.85);
-  --surface-container: #f1f5f9;
-  --surface-container-low: #f8fafc;
-  --surface-container-high: #e2e8f0;
-  --surface-container-highest: #cbd5e1;
+  --surface-glass: rgba(255, 255, 255, 0.92);
+  --surface-container: #f5f5f5;
+  --surface-container-low: #fafafa;
+  --surface-container-high: #e5e5e5;
+  --surface-container-highest: #d4d4d4;
   
-  --on-surface: #1e293b;
-  --on-surface-variant: #64748b;
+  --on-surface: #0a0a0a;
+  --on-surface-variant: #525252;
   
-  --outline: #94a3b8;
-  --outline-variant: #e2e8f0;
+  --outline: #a3a3a3;
+  --outline-variant: #e5e5e5;
   
-  --error: #ef4444;
-  --error-light: #fef2f2;
+  --error: #000000;
+  --error-light: #f5f5f5;
 
-  /* Modern Glassmorphic Gradients */
-  --grad-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --grad-surface: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  --grad-accent: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-  --grad-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --grad-amber: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  /* Black & White Gradients */
+  --grad-primary: linear-gradient(135deg, #000000 0%, #404040 100%);
+  --grad-surface: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  --grad-accent: linear-gradient(135deg, #171717 0%, #525252 100%);
+  --grad-emerald: linear-gradient(135deg, #000000 0%, #262626 100%);
+  --grad-amber: linear-gradient(135deg, #262626 0%, #525252 100%);
 
-  /* Modern Soft Elevation & Depth */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  /* High Contrast Crisp Depth */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+  --shadow-glow: 0 0 20px rgba(0, 0, 0, 0.08);
 
   /* Fonts */
   --font-display: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
@@ -212,10 +212,10 @@ button {
 
 @keyframes pulseGlow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
   }
   50% {
-    box-shadow: 0 0 25px rgba(79, 70, 229, 0.4);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.16);
   }
 }
 
