@@ -494,14 +494,22 @@ Output a JSON object matching this structure:
         
         # Programmatic validation of the confidence score to prevent LLM calculation discrepancies
         calc_confidence = 100
-        insufficient_balance = balance_check and not balance_check.get("sufficient", True)
-        is_request_expired = policy_check and any("Expired request" in v for v in policy_check.get("violations", []))
+        bal_dict = balance_check if isinstance(balance_check, dict) else {}
+        pol_dict = policy_check if isinstance(policy_check, dict) else {}
+        team_dict = team_availability if isinstance(team_availability, dict) else {}
+        cal_dict = calendar_conflict if isinstance(calendar_conflict, dict) else {}
+
+        insufficient_balance = not bal_dict.get("sufficient", True)
+        violations = pol_dict.get("violations", []) if isinstance(pol_dict.get("violations"), list) else []
+        is_request_expired = any("Expired request" in str(v) for v in violations)
 
         if insufficient_balance or is_request_expired:
             calc_confidence = 0
             result["decision"] = "Reject"
             if insufficient_balance:
-                result["justification"] = f"• Starting confidence: 100%\n• Set confidence directly to 0% due to insufficient leave balance (requested {balance_check.get('requestedDays')} days, available {balance_check.get('availableBalance')} days).\n• Final Decision: REJECT"
+                req_d = bal_dict.get('requestedDays', 'N/A')
+                avail_d = bal_dict.get('availableBalance', 'N/A')
+                result["justification"] = f"• Starting confidence: 100%\n• Set confidence directly to 0% due to insufficient leave balance (requested {req_d} days, available {avail_d} days).\n• Final Decision: REJECT"
             else:
                 result["justification"] = f"• Starting confidence: 100%\n• Set confidence directly to 0% due to EXPIRED leave request date (start date is in the past).\n• Final Decision: REJECT"
         else:
