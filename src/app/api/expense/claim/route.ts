@@ -56,6 +56,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 2. Strict Category & Business Purpose Non-Reimbursable Guard
+    const descLower = description.toLowerCase();
+    const typeLower = (expenseType || "").toLowerCase();
+    const disallowedKeywords = [
+      "grocery", "supermarket", "liquor", "alcohol", "beer", "wine", "spirits", "pub", "bar",
+      "personal", "cinema", "movie", "gaming", "casino", "spa", "massage", "fashion", "clothes", "shoe"
+    ];
+
+    const matchedDisallowed = disallowedKeywords.find(
+      (kw) => descLower.includes(kw) || typeLower.includes(kw)
+    );
+
+    if (matchedDisallowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `🚫 Non-reimbursable item detected ('${matchedDisallowed}'). Policy only permits corporate Travel, Medical, Software/Cloud, Wifi, and Office Peripherals. Grocery, liquor, and personal entertainment claims are strictly prohibited.`
+        },
+        { status: 400 }
+      );
+    }
+
+    // 3. Exact Duplicate Claim Guard across employee's active claims
+    const existingDuplicate = await ExpenseClaim.findOne({
+      employeeId,
+      amount: Number(amount),
+      currentStatus: { $ne: "Withdrawn" },
+      $or: [
+        { receiptFileName: receiptFileName || "receipt.jpg" },
+        { description: description.trim() }
+      ]
+    });
+
+    if (existingDuplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `⚠️ Duplicate Claim Detected! You have already submitted an active claim (${existingDuplicate.claimNumber}) for ₹${amount} with receipt file '${existingDuplicate.receiptFileName}'. Duplicate submissions are strictly rejected by AI Policy.`
+        },
+        { status: 400 }
+      );
+    }
+
     const count = await ExpenseClaim.countDocuments();
     const claimNumber = `EXP-2026-${count + 1030}`;
 

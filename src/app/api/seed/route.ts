@@ -703,16 +703,16 @@ export async function GET() {
         ]
       },
       {
-        category: "Training & Certification",
-        maxLimitPerTrip: 12000,
-        monthlyLimit: 25000,
+        category: "Medical & Health",
+        maxLimitPerTrip: 10000,
+        monthlyLimit: 30000,
         receiptRequired: true,
         allowedRoles: ["Employee", "Manager", "Admin"],
-        description: "Professional Upskilling & Certification Exam Policy",
+        description: "Employee Medical Bills & Prescription Reimbursement Policy",
         rules: [
-          "AWS, GCP, PMP, or technical certification exam fees up to ₹12,000 reimbursable",
-          "Proof of passing score certificate & payment receipt mandatory",
-          "Pre-approval from Engineering Director required prior to exam registration"
+          "Outpatient consultations, diagnostic tests, and prescription medicines reimbursable up to ₹10,000 per claim",
+          "GST tax invoice from registered pharmacy or hospital mandatory",
+          "Elective cosmetic treatments and health supplements are non-reimbursable"
         ]
       }
     ]);

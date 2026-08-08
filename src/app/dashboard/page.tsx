@@ -3366,11 +3366,12 @@ export default function Dashboard() {
                       value={expenseCategory}
                       onChange={(e) => setExpenseCategory(e.target.value)}
                     >
-                      <option value="Travel">Travel</option>
-                      <option value="Cloud / Software">Cloud / Software</option>
-                      <option value="Meals">Meals</option>
-                      <option value="Office Equipment">Office Equipment</option>
-                      <option value="Other">Other</option>
+                      <option value="Travel">Travel (Rideshare / Taxi / Flight)</option>
+                      <option value="Medical & Health">Medical & Health (Consultations / Prescriptions)</option>
+                      <option value="Cloud / Software">Cloud / Software (SaaS / AWS)</option>
+                      <option value="Internet & Cell Phone Allowance">Internet / Wifi Allowance</option>
+                      <option value="Meals & Client Entertainment">Meals & Client Entertainment</option>
+                      <option value="Office Supplies & Equipment">Office Supplies & Equipment</option>
                     </select>
                   </div>
                   <div className={styles.formGroup}>
