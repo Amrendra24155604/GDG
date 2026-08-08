@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const newRequest = await ProcurementRequest.create({
       requestNumber,
       employeeId,
-      managerId: managerId || "EMP-002", // Default to Sarah Jenkins if not specified
+      managerId: managerId || "EMP-002", // Default to Raja babu (EMP-002) if not specified
       itemName,
       category: reqCategory,
       quantity: quantity || 1,

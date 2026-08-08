@@ -2564,7 +2564,7 @@ export default function Dashboard() {
                         <div>PO Number: <strong>PO-2026-NBD</strong></div>
                         <div>Estimated Delivery: <strong>5 Days</strong></div>
                         <div>Vendor: <strong>Dell Inc</strong></div>
-                        <div>Authorized By: <strong>Sarah Jenkins</strong></div>
+                        <div>Authorized By: <strong>Raja babu</strong></div>
                       </div>
                     </div>
                   </div>

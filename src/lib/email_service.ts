@@ -27,7 +27,7 @@ export async function generateFormalAIEmail(payload: EmailPayload): Promise<{ su
     action,
     requestIdOrNumber,
     details,
-    managerName = "Sarah Jenkins (Manager)",
+    managerName = "Raja babu (Manager)",
     managerComments = ""
   } = payload;
 
