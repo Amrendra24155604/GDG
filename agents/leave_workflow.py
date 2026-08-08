@@ -223,8 +223,16 @@ def main():
         start_time = time.time()
         rules_text = load_agent_rules("Policy Agent")
         
+        raw_start = request.get("startDate")
+        if isinstance(raw_start, str):
+            start_date_obj = datetime.fromisoformat(raw_start.replace("Z", ""))
+        elif isinstance(raw_start, datetime):
+            start_date_obj = raw_start
+        else:
+            start_date_obj = datetime.now(timezone.utc)
+
         today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-        start_date_clean = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
+        start_date_clean = start_date_obj.replace(tzinfo=timezone.utc) if start_date_obj.tzinfo is None else start_date_obj
         
         is_expired = start_date_clean < today
         
@@ -263,7 +271,7 @@ Output a JSON object matching this structure:
             violations = result.get("violations", [])
             violations.append("Expired request: Leave start date is in the past relative to current date.")
             result["violations"] = violations
-            result["reasoning"] = f"Request is expired. Start date ({start_date.strftime('%Y-%m-%d')}) is before current date ({today.strftime('%Y-%m-%d')})."
+            result["reasoning"] = f"Request is expired. Start date ({start_date_obj.strftime('%Y-%m-%d')}) is before current date ({today.strftime('%Y-%m-%d')})."
             
         policy_check = result
         
