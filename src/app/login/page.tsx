@@ -200,18 +200,105 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Demo Accounts tip */}
+        {/* Quick Demo Credentials */}
         <div
           style={{
-            borderTop: "1px solid #eeeeee",
-            paddingTop: "16px",
-            fontSize: "12px",
-            color: "#646464",
-            textAlign: "left"
+            borderTop: "1px solid #e2e2e2",
+            paddingTop: "20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px"
           }}
         >
-          <span style={{ fontWeight: "bold", display: "block", marginBottom: "4px" }}>Default Developer:</span>
-          Username: <code style={{ backgroundColor: "#f3f3f4", padding: "2px 4px", borderRadius: "3px" }}>Amrendra</code> / Password: <code style={{ backgroundColor: "#f3f3f4", padding: "2px 4px", borderRadius: "3px" }}>Ankush@123</code>
+          <span style={{ fontSize: "12px", fontWeight: "700", color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            🔑 Demo Login Accounts (1-Click Fill)
+          </span>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("Ankush");
+                setPassword("Ankush@123");
+              }}
+              style={{
+                padding: "10px 12px",
+                backgroundColor: "#fafafa",
+                border: "1px solid #e5e5e5",
+                borderRadius: "8px",
+                textAlign: "left",
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>👤 User (Employee)</strong>
+                <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Ankush</strong> | Pass: <strong>Ankush@123</strong></span>
+              </div>
+              <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>
+                Fill
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("Raja babu");
+                setPassword("Ankush@123");
+              }}
+              style={{
+                padding: "10px 12px",
+                backgroundColor: "#fafafa",
+                border: "1px solid #e5e5e5",
+                borderRadius: "8px",
+                textAlign: "left",
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>👔 Manager</strong>
+                <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Raja babu</strong> | Pass: <strong>Ankush@123</strong></span>
+              </div>
+              <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>
+                Fill
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("Amrendra");
+                setPassword("Ankush@123");
+              }}
+              style={{
+                padding: "10px 12px",
+                backgroundColor: "#fafafa",
+                border: "1px solid #e5e5e5",
+                borderRadius: "8px",
+                textAlign: "left",
+                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: "13px", color: "#0a0a0a", display: "block" }}>💻 Developer (Admin)</strong>
+                <span style={{ fontSize: "12px", color: "#525252" }}>Username: <strong>Amrendra</strong> | Pass: <strong>Ankush@123</strong></span>
+              </div>
+              <span style={{ fontSize: "11px", fontWeight: "bold", backgroundColor: "#000000", color: "#ffffff", padding: "4px 8px", borderRadius: "4px" }}>
+                Fill
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
