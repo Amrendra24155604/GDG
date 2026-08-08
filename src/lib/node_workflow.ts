@@ -77,16 +77,21 @@ export async function runProcurementWorkflowNode(requestId: string) {
       { category, priority, estimatedCost: request.estimatedCost }
     );
 
-    // Step 2: Employee Context Agent
+    // Step 2: Employee Context Agent (Designation is CORE confidence driver)
     await delay(600);
+    const empDesignation = employee?.designation || "Unspecified Designation";
+    const hasDesignation = !!employee?.designation;
+    // Core confidence logic: 100% when active official designation verified, 50% if designation missing
+    const contextConfidence = hasDesignation ? 100 : 50;
+
     await logAgentExecution(
       requestId,
       "Employee Context Agent",
-      "User Context Retrieval",
+      "User Designation & Profile Retrieval",
       "Completed",
-      100,
-      `Employee ${empName} holds role '${employee?.role || "Employee"}' in '${empDept}'. Active assigned assets checked.`,
-      { employee: empName, department: empDept }
+      contextConfidence,
+      `Employee ${empName} verified with Designation: '${empDesignation}', Role: '${employee?.role || "Employee"}' in '${empDept}'. Core designation confidence: ${contextConfidence}%.`,
+      { employee: empName, designation: empDesignation, department: empDept, contextConfidence }
     );
 
     // Step 3: Inventory Agent
@@ -222,18 +227,23 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
     today.setHours(0, 0, 0, 0);
     const isExpired = start < today;
 
-    // Step 1: Employee Context Agent
+    // Step 1: Employee Context Agent (Designation is CORE confidence driver)
     await delay(600);
     const availBalance = employee?.leaveBalance?.casualLeave || 8;
     const balancePassed = availBalance >= daysRequested;
+    const empDesignation = employee?.designation || "Unspecified Designation";
+    const hasValidDesignation = !!employee?.designation;
+    // Core confidence logic: 100% if active designation verified, 50% if unassigned/missing
+    const contextConfidence = hasValidDesignation ? 100 : 50;
+
     await logAgentExecution(
       leaveRequestId,
       "Employee Context Agent",
-      "Employee Profile & Balance Retrieval",
+      "Employee Profile & Designation Verification",
       "Completed",
-      100,
-      `Employee ${empName} profile retrieved. Requested ${daysRequested} days of ${leaveReq.leaveType}. Available balance: ${availBalance} days. Sufficient balance: ${balancePassed}.`,
-      { daysRequested, availBalance, balancePassed }
+      contextConfidence,
+      `Employee ${empName} verified with Designation: '${empDesignation}' (${employee?.department || "General"}). Core designation match confidence: ${contextConfidence}%. Available balance: ${availBalance} days.`,
+      { designation: empDesignation, department: employee?.department, daysRequested, availBalance, balancePassed, contextConfidence }
     );
 
     // Step 2: Leave Balance Check Agent
@@ -334,16 +344,21 @@ export async function runExpenseWorkflowNode(expenseClaimId: string) {
     const employee = await User.findOne({ employeeId: claim.employeeId });
     const empName = employee ? employee.name : "Amrendra Yadav";
 
-    // Step 1: Employee Context Agent
+    // Step 1: Employee Context Agent (Designation is CORE confidence driver)
     await delay(600);
+    const empDesignation = employee?.designation || "Unspecified Designation";
+    const hasDesignation = !!employee?.designation;
+    // Core confidence logic: 100% when valid designation matched in DB, 50% if unverified
+    const contextConfidence = hasDesignation ? 100 : 50;
+
     await logAgentExecution(
       expenseClaimId,
       "Employee Context Agent",
-      "Monthly Limit Verification",
+      "User Designation & Policy Group Retrieval",
       "Completed",
-      100,
-      `Employee ${empName} (${employee?.department || "Engineering"}). Monthly policy limit: ₹25,000, Claimed this month: ₹8,400. Remaining: ₹16,600.`,
-      { monthlyLimit: 25000, claimedMonth: 8400 }
+      contextConfidence,
+      `Employee ${empName} verified with Designation: '${empDesignation}' (${employee?.department || "Engineering"}). Core designation confidence: ${contextConfidence}%. Monthly policy limit: ₹25,000.`,
+      { designation: empDesignation, department: employee?.department, monthlyLimit: 25000, contextConfidence }
     );
 
     // Step 2: Receipt Agent (OCR)
