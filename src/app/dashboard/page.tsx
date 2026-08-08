@@ -1734,40 +1734,42 @@ export default function Dashboard() {
           <div className={styles.title}>Employee Portal</div>
         </div>
 
-        {/* Logout container */}
+        {/* Header Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button
-            onClick={async () => {
-              try {
-                const res = await fetch("/api/seed");
-                const data = await res.json();
-                if (data.success) {
-                  showCustomAlert("Database Seeded 🎉", `Successfully populated database! Counts: ${JSON.stringify(data.seededCounts)}`);
-                  refreshDashboardData();
-                } else {
-                  showCustomAlert("Seed Error", data.error);
+          {currentUser.role === "Developer" && (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/seed");
+                  const data = await res.json();
+                  if (data.success) {
+                    showCustomAlert("Database Seeded 🎉", `Successfully populated database! Counts: ${JSON.stringify(data.seededCounts)}`);
+                    refreshDashboardData();
+                  } else {
+                    showCustomAlert("Seed Error", data.error);
+                  }
+                } catch (e: any) {
+                  showCustomAlert("Error", e.message);
                 }
-              } catch (e: any) {
-                showCustomAlert("Error", e.message);
-              }
-            }}
-            style={{
-              padding: "6px 14px",
-              backgroundColor: "var(--surface-container-highest)",
-              color: "var(--on-surface)",
-              border: "1px solid var(--outline)",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontWeight: "600",
-              fontSize: "12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>database</span>
-            Seed DB (50+ Items)
-          </button>
+              }}
+              style={{
+                padding: "6px 14px",
+                backgroundColor: "var(--surface-container-highest)",
+                color: "var(--on-surface)",
+                border: "1px solid var(--outline)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>database</span>
+              Reset & Seed DB (50+ Items)
+            </button>
+          )}
           <button
             onClick={handleLogout}
             style={{
