@@ -107,9 +107,7 @@ def main():
     risk_check = {}
     recommendation_details = {}
 
-    # ==========================================
-    # Agent 1: Requirement Analysis Agent
-    # ==========================================
+   
     try:
         start_time = time.time()
         simulate_delay(1.2)
@@ -175,9 +173,7 @@ Estimated Cost: ₹{request.get('estimatedCost', 0)}"""
             "timestamp": datetime.now(timezone.utc)
         })
 
-    # ==========================================
     # Agent 2: Employee Context Agent
-    # ==========================================
     try:
         start_time = time.time()
         simulate_delay(1.0)
