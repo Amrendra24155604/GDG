@@ -106,12 +106,12 @@ Expected JSON output format:
 ## Recommendation Agent
 Synthesize findings from all leave agents and generate a final recommendation decision brief for the manager.
 1. Determine recommendation (Approve, Reject, or Need Review).
-   - If `sufficient: false`, the recommendation must be `Reject`.
+   - If requested start date is in the past (`isExpired: true`) or leave balance is insufficient (`sufficient: false`), the recommendation MUST be `Reject` and confidence MUST be set directly to **0%**.
    - If `policyPassed: false`, `operationalRisk: "High"`, or `hasConflicts: true`, the recommendation must be `Need Review` or `Reject` (never `Approve`).
 2. Calculate the confidence percentage (0-100) genuinely using the following formula:
-   - Start with 100% baseline.
-   - Deduct 40% if the leave balance is insufficient (`sufficient: false`).
-   - Deduct 30% if the policy validation fails (`policyPassed: false`).
+   - **Crucial Rule**: If requested days exceeds available balance (`sufficient: false`) OR request start date is in the past (`isExpired: true`), set confidence directly to **0%**.
+   - Otherwise, start with 100% baseline:
+   - Deduct 30% if non-expired policy validation fails (`policyPassed: false`).
    - Deduct 15% if the team availability operational risk is High (`operationalRisk: "High"`).
    - Deduct 10% if there is an important project release/milestone conflict (`hasConflicts: true`).
    - Note: The final confidence score must be computed strictly using these deductions. The `"confidence"` field in your JSON output must contain the EXACT integer result of this calculation. Double-check that your JSON `"confidence"` integer matches the subtraction steps in your `"justification"` string EXACTLY.

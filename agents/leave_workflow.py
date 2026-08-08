@@ -223,6 +223,11 @@ def main():
         start_time = time.time()
         rules_text = load_agent_rules("Policy Agent")
         
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_date_clean = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
+        
+        is_expired = start_date_clean < today
+        
         prompt = f"""
 You are the Policy Agent. Validate this leave request against the company policy rules:
 {rules_text}
@@ -233,6 +238,7 @@ Requested Days: {balance_check.get("requestedDays") if balance_check else 1}
 Start Date: {request.get("startDate")}
 End Date: {request.get("endDate")}
 Submission Date: {request.get("createdAt")}
+Is Expired / Past Date: {is_expired}
 
 Output a JSON object matching this structure:
 {{
@@ -251,26 +257,34 @@ Output a JSON object matching this structure:
         if content is None:
             raise ValueError("OpenAI response content was None")
         result = json.loads(content)
+        
+        if is_expired:
+            result["policyPassed"] = False
+            violations = result.get("violations", [])
+            violations.append("Expired request: Leave start date is in the past relative to current date.")
+            result["violations"] = violations
+            result["reasoning"] = f"Request is expired. Start date ({start_date.strftime('%Y-%m-%d')}) is before current date ({today.strftime('%Y-%m-%d')})."
+            
         policy_check = result
         
         db["aiworkflowlogs"].insert_one({
             "requestId": request_id_str,
             "agentName": "Leave Policy Agent",
-            "action": "Validated requested leave against corporate guidelines.",
+            "action": "Validated requested dates against company leave policy & advance notice rules.",
             "status": "Completed",
-            "confidence": 100,
-            "reasoning": result.get("reasoning", "Leave complies with policies."),
+            "confidence": 100 if result.get("policyPassed") else 0,
+            "reasoning": result.get("reasoning", "Policy validation completed."),
             "evidence": json.dumps(result),
             "executionTime": int((time.time() - start_time) * 1000),
             "timestamp": datetime.now(timezone.utc)
         })
-        print("Agent 3: Policy Agent Completed.")
+        print("Agent 3: Policy Agent Validated.")
     except Exception as err:
         print(f"Agent 3 Error: {err}", file=sys.stderr)
         db["aiworkflowlogs"].insert_one({
             "requestId": request_id_str,
             "agentName": "Leave Policy Agent",
-            "action": "Check leave policy rules",
+            "action": "Validate leave policy",
             "status": "Failed",
             "confidence": 0,
             "reasoning": f"Error: {str(err)}",
@@ -472,28 +486,33 @@ Output a JSON object matching this structure:
         
         # Programmatic validation of the confidence score to prevent LLM calculation discrepancies
         calc_confidence = 100
-        if balance_check and not balance_check.get("sufficient", True):
-            calc_confidence -= 40
-        if policy_check and not policy_check.get("policyPassed", True):
-            calc_confidence -= 30
-        if team_availability and team_availability.get("operationalRisk", "Low") == "High":
-            calc_confidence -= 15
-        if calendar_conflict and calendar_conflict.get("hasConflicts", False):
-            calc_confidence -= 10
-            
-        calc_confidence = max(0, min(100, calc_confidence))
-        result["confidence"] = calc_confidence
-        
-        # Enforce reject decision if balance insufficient
-        if balance_check and not balance_check.get("sufficient", True):
+        insufficient_balance = balance_check and not balance_check.get("sufficient", True)
+        is_request_expired = policy_check and any("Expired request" in v for v in policy_check.get("violations", []))
+
+        if insufficient_balance or is_request_expired:
+            calc_confidence = 0
             result["decision"] = "Reject"
+            if insufficient_balance:
+                result["justification"] = f"• Starting confidence: 100%\n• Set confidence directly to 0% due to insufficient leave balance (requested {balance_check.get('requestedDays')} days, available {balance_check.get('availableBalance')} days).\n• Final Decision: REJECT"
+            else:
+                result["justification"] = f"• Starting confidence: 100%\n• Set confidence directly to 0% due to EXPIRED leave request date (start date is in the past).\n• Final Decision: REJECT"
+        else:
+            if policy_check and not policy_check.get("policyPassed", True):
+                calc_confidence -= 30
+            if team_availability and team_availability.get("operationalRisk", "Low") == "High":
+                calc_confidence -= 15
+            if calendar_conflict and calendar_conflict.get("hasConflicts", False):
+                calc_confidence -= 10
+                
+            calc_confidence = max(0, min(100, calc_confidence))
             
-        # Enforce review or reject if policy fails, operational risk high, or conflicts exist
-        elif (policy_check and not policy_check.get("policyPassed", True)) or \
-             (team_availability and team_availability.get("operationalRisk", "Low") == "High") or \
-             (calendar_conflict and calendar_conflict.get("hasConflicts", False)):
-            if result["decision"] == "Approve":
-                result["decision"] = "Need Review"
+            if (policy_check and not policy_check.get("policyPassed", True)) or \
+               (team_availability and team_availability.get("operationalRisk", "Low") == "High") or \
+               (calendar_conflict and calendar_conflict.get("hasConflicts", False)):
+                if result.get("decision") == "Approve":
+                    result["decision"] = "Need Review"
+
+        result["confidence"] = calc_confidence
                 
         # Update Leave Request with AI decision
         db["leaverequests"].update_one(

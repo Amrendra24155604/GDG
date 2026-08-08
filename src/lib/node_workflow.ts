@@ -218,6 +218,10 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
     const end = new Date(leaveReq.endDate);
     const daysRequested = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isExpired = start < today;
+
     // Step 1: Employee Context Agent
     await delay(600);
     const availBalance = employee?.leaveBalance?.casualLeave || 8;
@@ -239,7 +243,7 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
       "Leave Balance Check Agent",
       "Balance Verification",
       "Completed",
-      100,
+      balancePassed ? 100 : 0,
       `Verified requested duration (${daysRequested} days) against available ${leaveReq.leaveType} balance (${availBalance} days). Balance sufficient: ${balancePassed}.`,
       { sufficient: balancePassed, availBalance }
     );
@@ -247,15 +251,19 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
     // Step 3: Policy Agent / Leave Policy Agent
     await delay(600);
     const maxConsecutive = 10;
-    const policyPassed = daysRequested <= maxConsecutive;
+    const policyPassed = daysRequested <= maxConsecutive && !isExpired;
+    const policyReasoning = isExpired
+      ? `Request is EXPIRED. Start date (${start.toLocaleDateString()}) is in the past relative to today (${today.toLocaleDateString()}).`
+      : `Verified against company leave policy (Max consecutive allowed: ${maxConsecutive} days). Policy passed: ${policyPassed}.`;
+
     await logAgentExecution(
       leaveRequestId,
       "Leave Policy Agent",
       "Leave Policy Validation",
       "Completed",
-      95,
-      `Verified against company leave policy (Max consecutive allowed: ${maxConsecutive} days). Policy passed: ${policyPassed}.`,
-      { maxConsecutive, policyPassed }
+      policyPassed ? 95 : 0,
+      policyReasoning,
+      { maxConsecutive, policyPassed, isExpired }
     );
 
     // Step 4: Team Availability Agent
@@ -282,13 +290,14 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
       { conflictFound: false }
     );
 
-    // Step 5: Recommendation Agent
+    // Step 6: Recommendation Agent
     await delay(600);
-    const recommendation = (balancePassed && policyPassed) ? "Approve" : "Reject";
-    const confidence = (balancePassed && policyPassed) ? 98 : 70;
-    const recReasoning = (balancePassed && policyPassed)
-      ? `Starting confidence: 100% - Leave balance is sufficient (${availBalance} days available) - Policy validation passed - Operational risk is Low`
-      : `Starting confidence: 100% - Deducted 30% for balance/policy violation.`;
+    const isFailedRule = !balancePassed || isExpired;
+    const recommendation = isFailedRule ? "Reject" : (policyPassed ? "Approve" : "Need Review");
+    const confidence = isFailedRule ? 0 : 98;
+    const recReasoning = isFailedRule
+      ? `Starting confidence: 100% ➔ Set directly to 0% confidence. ${!balancePassed ? `Insufficient balance (${availBalance} available, ${daysRequested} requested).` : `Leave request date is EXPIRED (${start.toLocaleDateString()} is in the past).`}`
+      : `Starting confidence: 100% - Leave balance is sufficient (${availBalance} days available) - Policy validation passed - Operational risk is Low`;
 
     await logAgentExecution(
       leaveRequestId,
@@ -296,7 +305,7 @@ export async function runLeaveWorkflowNode(leaveRequestId: string) {
       "Synthesis & Decision",
       "Completed",
       confidence,
-      `Recommend ${recommendation}. ${balancePassed ? "Sufficient leave balance available." : "Insufficient leave balance."}`,
+      `Recommend ${recommendation}. ${recReasoning}`,
       { recommendation, confidence }
     );
 
