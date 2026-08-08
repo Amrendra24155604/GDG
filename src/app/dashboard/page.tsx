@@ -2920,15 +2920,45 @@ export default function Dashboard() {
                       borderRadius: "12px",
                       display: "flex",
                       flexDirection: "column",
-                      gap: "12px"
+                      gap: "8px"
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#2e7d32" }}>
                       <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>check_circle</span>
-                      <h4 style={{ fontSize: "18px", fontWeight: "700" }}>Leave Approved Successfully</h4>
+                      <h4 style={{ fontSize: "18px", fontWeight: "700" }}>
+                        {portalViewRole === "Employee" ? "Your Leave Has Been Approved" : "Leave Request Approved"}
+                      </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: "14px", color: "var(--on-surface-variant)" }}>
-                      Your leave balance has been successfully deducted, and notifications have been dispatched to your team and manager.
+                      {portalViewRole === "Employee"
+                        ? "Your leave balance has been updated and deducted. A formal AI confirmation email has been generated and sent to your registered inbox."
+                        : `You have approved this leave request for ${selectedLeave.employeeId === "EMP-001" ? "Ankush" : "the employee"}. A formal AI email confirmation has been dispatched to their inbox.`}
+                    </p>
+                  </div>
+                )}
+
+                {selectedLeave.currentStatus === "Rejected" && (
+                  <div
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "#ffeacc",
+                      border: "1px solid #ffcc80",
+                      borderRadius: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#c62828" }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>cancel</span>
+                      <h4 style={{ fontSize: "18px", fontWeight: "700" }}>
+                        {portalViewRole === "Employee" ? "Your Leave Request Was Declined" : "Leave Request Rejected"}
+                      </h4>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "14px", color: "var(--on-surface-variant)" }}>
+                      {portalViewRole === "Employee"
+                        ? "Your manager has declined this leave request. A formal AI rejection email detailing the review decision has been sent to your inbox."
+                        : `You have rejected this leave request for ${selectedLeave.employeeId === "EMP-001" ? "Ankush" : "the employee"}. A formal AI notification email has been dispatched to them.`}
                     </p>
                   </div>
                 )}
